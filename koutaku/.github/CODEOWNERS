@@ -1,0 +1,9 @@
+.github/ @koutaku/bifrost-admin
+.claude/ @koutaku/bifrost-admin
+.nix/ @koutaku/bifrost-admin
+Makefile @koutaku/bifrost-admin
+flake.nix @koutaku/bifrost-admin
+tests/scripts/ @koutaku/bifrost-admin
+*.sh @koutaku/bifrost-admin
+helm-charts/ @koutaku/bifrost-admin
+terraform/ @koutaku/bifrost-admin

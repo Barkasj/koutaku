@@ -1,0 +1,27 @@
+{
+    "$schema": "https://www.getkoutaku.ai/schema",
+    "config_store": {
+        "enabled": true,
+        "type": "postgres",
+        "config": {
+            "host": "localhost",
+            "port": "5432",
+            "user": "koutaku",
+            "password": "koutaku_password",
+            "db_name": "koutaku",
+            "ssl_mode": "disable"
+        }
+    },
+    "logs_store": {
+        "enabled": true,
+        "type": "postgres",
+        "config": {
+            "host": "localhost",
+            "port": "5432",
+            "user": "koutaku",
+            "password": "koutaku_password",
+            "db_name": "koutaku",
+            "ssl_mode": "disable"
+        }
+    }
+}

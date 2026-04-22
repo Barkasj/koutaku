@@ -1,0 +1,331 @@
+package schemas
+
+import (
+	"context"
+	"runtime"
+	"testing"
+	"time"
+)
+
+func TestNewKoutakuContext_NoGoroutineLeakWithBackgroundAndNoDeadline(t *testing.T) {
+	// Get baseline goroutine count
+	runtime.GC()
+	time.Sleep(10 * time.Millisecond)
+	baseline := runtime.NumGoroutine()
+
+	// Create multiple contexts with context.Background() and no deadline
+	// Previously this would leak goroutines
+	contexts := make([]*KoutakuContext, 100)
+	for i := 0; i < 100; i++ {
+		contexts[i] = NewKoutakuContext(context.Background(), NoDeadline)
+	}
+
+	// Give time for any goroutines to start
+	runtime.Gosched()
+	time.Sleep(10 * time.Millisecond)
+
+	// Check goroutine count - should not have increased significantly
+	// (allow some slack for runtime/test goroutines)
+	afterCreate := runtime.NumGoroutine()
+
+	// With the fix, no goroutines should be spawned since there's nothing to watch
+	// Allow a small margin for test framework goroutines
+	if afterCreate > baseline+10 {
+		t.Errorf("Goroutine leak detected: baseline=%d, after creating 100 contexts=%d", baseline, afterCreate)
+	}
+
+	// Verify the contexts still work correctly
+	for i, ctx := range contexts {
+		// Should not be cancelled
+		select {
+		case <-ctx.Done():
+			t.Errorf("Context %d should not be done", i)
+		default:
+			// Expected
+		}
+
+		// Should return nil error
+		if ctx.Err() != nil {
+			t.Errorf("Context %d Err() should be nil, got %v", i, ctx.Err())
+		}
+
+		// Should have no deadline
+		if _, ok := ctx.Deadline(); ok {
+			t.Errorf("Context %d should not have deadline", i)
+		}
+	}
+
+	// Explicitly cancel all contexts
+	for _, ctx := range contexts {
+		ctx.Cancel()
+	}
+
+	// Verify all are cancelled
+	for i, ctx := range contexts {
+		select {
+		case <-ctx.Done():
+			// Expected
+		default:
+			t.Errorf("Context %d should be done after Cancel()", i)
+		}
+
+		if ctx.Err() != context.Canceled {
+			t.Errorf("Context %d Err() should be context.Canceled, got %v", i, ctx.Err())
+		}
+	}
+}
+
+func TestNewKoutakuContext_GoroutineStartsWithDeadline(t *testing.T) {
+	// Get baseline goroutine count
+	runtime.GC()
+	time.Sleep(10 * time.Millisecond)
+	baseline := runtime.NumGoroutine()
+
+	// Create context with a deadline - should spawn goroutine
+	deadline := time.Now().Add(1 * time.Hour)
+	ctx := NewKoutakuContext(context.Background(), deadline)
+
+	// Give time for goroutine to start
+	runtime.Gosched()
+	time.Sleep(10 * time.Millisecond)
+
+	afterCreate := runtime.NumGoroutine()
+
+	// Should have at least one more goroutine for the deadline watcher
+	if afterCreate <= baseline {
+		t.Errorf("Expected goroutine to be spawned for deadline context: baseline=%d, after=%d", baseline, afterCreate)
+	}
+
+	// Clean up
+	ctx.Cancel()
+}
+
+func TestNewKoutakuContext_GoroutineStartsWithCancellableParent(t *testing.T) {
+	// Get baseline goroutine count
+	runtime.GC()
+	time.Sleep(10 * time.Millisecond)
+	baseline := runtime.NumGoroutine()
+
+	// Create a cancellable parent
+	parent, parentCancel := context.WithCancel(context.Background())
+	defer parentCancel()
+
+	// Create KoutakuContext with cancellable parent but no deadline
+	// Should spawn goroutine to watch parent
+	ctx := NewKoutakuContext(parent, NoDeadline)
+
+	// Give time for goroutine to start
+	runtime.Gosched()
+	time.Sleep(10 * time.Millisecond)
+
+	afterCreate := runtime.NumGoroutine()
+
+	// Should have goroutine for watching parent cancellation
+	if afterCreate <= baseline {
+		t.Errorf("Expected goroutine to be spawned for cancellable parent: baseline=%d, after=%d", baseline, afterCreate)
+	}
+
+	// Verify parent cancellation propagates
+	parentCancel()
+	time.Sleep(10 * time.Millisecond)
+
+	select {
+	case <-ctx.Done():
+		// Expected
+	default:
+		t.Error("Context should be cancelled when parent is cancelled")
+	}
+
+	if ctx.Err() != context.Canceled {
+		t.Errorf("Context Err() should be context.Canceled, got %v", ctx.Err())
+	}
+}
+
+func TestNewKoutakuContext_DeadlineExpires(t *testing.T) {
+	// Create context with short deadline
+	deadline := time.Now().Add(50 * time.Millisecond)
+	ctx := NewKoutakuContext(context.Background(), deadline)
+
+	// Should not be done yet
+	select {
+	case <-ctx.Done():
+		t.Error("Context should not be done before deadline")
+	default:
+		// Expected
+	}
+
+	// Wait for deadline
+	time.Sleep(100 * time.Millisecond)
+
+	// Should be done now
+	select {
+	case <-ctx.Done():
+		// Expected
+	default:
+		t.Error("Context should be done after deadline")
+	}
+
+	if ctx.Err() != context.DeadlineExceeded {
+		t.Errorf("Context Err() should be context.DeadlineExceeded, got %v", ctx.Err())
+	}
+}
+
+func TestNewKoutakuContext_SetAndGetValue(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+
+	// Set a value
+	ctx.SetValue("key1", "value1")
+
+	// Get the value
+	if v := ctx.Value("key1"); v != "value1" {
+		t.Errorf("Expected value1, got %v", v)
+	}
+
+	// Get non-existent key
+	if v := ctx.Value("nonexistent"); v != nil {
+		t.Errorf("Expected nil for non-existent key, got %v", v)
+	}
+
+	// Clean up
+	ctx.Cancel()
+}
+
+func TestNewKoutakuContext_NilParent(t *testing.T) {
+	// Should not panic with nil parent
+	// Note: passing nil is allowed by NewKoutakuContext which converts it to context.Background()
+	var nilCtx context.Context //nolint:staticcheck // testing nil parent handling
+	ctx := NewKoutakuContext(nilCtx, NoDeadline)
+
+	// Should work normally
+	if ctx.Err() != nil {
+		t.Errorf("New context should have nil error, got %v", ctx.Err())
+	}
+
+	ctx.Cancel()
+
+	if ctx.Err() != context.Canceled {
+		t.Errorf("Cancelled context should have Canceled error, got %v", ctx.Err())
+	}
+}
+
+// Plugin logging tests
+
+func TestPluginLog_NoScopeIsNoop(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+	ctx.Log(LogLevelInfo, "should be ignored")
+	logs := ctx.GetPluginLogs()
+	if logs != nil {
+		t.Errorf("expected nil logs without plugin scope, got %v", logs)
+	}
+}
+
+func TestPluginLog_SinglePlugin(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+	name := "test-plugin"
+	scoped := ctx.WithPluginScope(&name)
+	scoped.Log(LogLevelInfo, "hello")
+	scoped.Log(LogLevelError, "oops")
+	scoped.ReleasePluginScope()
+
+	logs := ctx.GetPluginLogs()
+	if len(logs) != 2 {
+		t.Fatalf("expected 2 logs, got %d", len(logs))
+	}
+	if logs[0].PluginName != "test-plugin" || logs[0].Level != LogLevelInfo || logs[0].Message != "hello" {
+		t.Errorf("unexpected first log: %+v", logs[0])
+	}
+	if logs[1].Level != LogLevelError || logs[1].Message != "oops" {
+		t.Errorf("unexpected second log: %+v", logs[1])
+	}
+}
+
+func TestPluginLog_MultiplePlugins(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+
+	name1 := "plugin-a"
+	s1 := ctx.WithPluginScope(&name1)
+	s1.Log(LogLevelDebug, "a-msg")
+	s1.ReleasePluginScope()
+
+	name2 := "plugin-b"
+	s2 := ctx.WithPluginScope(&name2)
+	s2.Log(LogLevelWarn, "b-msg")
+	s2.ReleasePluginScope()
+
+	logs := ctx.GetPluginLogs()
+	if len(logs) != 2 {
+		t.Fatalf("expected 2 logs, got %d", len(logs))
+	}
+	if logs[0].PluginName != "plugin-a" {
+		t.Errorf("expected plugin-a, got %s", logs[0].PluginName)
+	}
+	if logs[1].PluginName != "plugin-b" {
+		t.Errorf("expected plugin-b, got %s", logs[1].PluginName)
+	}
+}
+
+func TestPluginLog_DrainTransfersOwnership(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+	name := "drain-test"
+	scoped := ctx.WithPluginScope(&name)
+	scoped.Log(LogLevelInfo, "msg1")
+	scoped.ReleasePluginScope()
+
+	drained := ctx.DrainPluginLogs()
+	if len(drained) != 1 {
+		t.Fatalf("expected 1 drained log, got %d", len(drained))
+	}
+
+	// After drain, GetPluginLogs should return nil
+	after := ctx.GetPluginLogs()
+	if after != nil {
+		t.Errorf("expected nil after drain, got %v", after)
+	}
+
+	// Second drain should return nil
+	second := ctx.DrainPluginLogs()
+	if second != nil {
+		t.Errorf("expected nil on second drain, got %v", second)
+	}
+}
+
+func TestPluginLog_ScopedContextValueDelegation(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+	ctx.SetValue(KoutakuContextKeyTraceID, "trace-123")
+
+	name := "delegate-test"
+	scoped := ctx.WithPluginScope(&name)
+
+	// Scoped should read from root
+	val := scoped.Value(KoutakuContextKeyTraceID)
+	if val != "trace-123" {
+		t.Errorf("expected trace-123, got %v", val)
+	}
+
+	// Scoped should write to root
+	type testContextKey string
+	const customKey testContextKey = "custom-key"
+	scoped.SetValue(customKey, "custom-val")
+	if ctx.Value(customKey) != "custom-val" {
+		t.Errorf("SetValue on scoped did not delegate to root")
+	}
+
+	scoped.ReleasePluginScope()
+}
+
+func TestPluginLog_PoolReuse(t *testing.T) {
+	ctx := NewKoutakuContext(context.Background(), NoDeadline)
+
+	// Create and release multiple scoped contexts to exercise the pool
+	for i := 0; i < 100; i++ {
+		name := "pool-test"
+		scoped := ctx.WithPluginScope(&name)
+		scoped.Log(LogLevelInfo, "pooled")
+		scoped.ReleasePluginScope()
+	}
+
+	logs := ctx.DrainPluginLogs()
+	if len(logs) != 100 {
+		t.Errorf("expected 100 logs from pool reuse, got %d", len(logs))
+	}
+}

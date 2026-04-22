@@ -1,0 +1,614 @@
+// Package lib provides core functionality for the Koutaku HTTP service,
+// including context propagation, header management, and integration with monitoring systems.
+//
+// This package handles the conversion of FastHTTP request contexts to Koutaku contexts,
+// ensuring that important metadata and tracking information is preserved across the system.
+// It supports propagation of both Prometheus metrics and Koutaku tracing data through HTTP headers.
+package lib
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/koutaku/koutaku/core/schemas"
+	"github.com/koutaku/koutaku/plugins/governance"
+	"github.com/koutaku/koutaku/plugins/semanticcache"
+	"github.com/valyala/fasthttp"
+)
+
+const (
+	// FastHTTPUserValueKoutakuContext stores the active *schemas.KoutakuContext on fasthttp.RequestCtx.
+	// This allows transport middleware and request handlers to share the same context instance.
+	FastHTTPUserValueKoutakuContext = "__koutaku_context"
+	// FastHTTPUserValueKoutakuCancel stores the cancel func for the active shared Koutaku context.
+	FastHTTPUserValueKoutakuCancel = "__koutaku_context_cancel"
+	// FastHTTPUserValueLargeResponseMode marks requests that streamed a large response body.
+	// It is used by transport middleware to avoid re-buffering response bodies for post-hooks.
+	FastHTTPUserValueLargeResponseMode = "__koutaku_large_response_mode"
+)
+
+// ParseSessionIDFromBaggage extracts the session-id baggage member value.
+// It supports simple W3C baggage parsing sufficient for log grouping.
+func ParseSessionIDFromBaggage(header string) string {
+	for _, member := range strings.Split(header, ",") {
+		member = strings.TrimSpace(member)
+		if member == "" {
+			continue
+		}
+
+		parts := strings.SplitN(member, ";", 2)
+		kv := strings.SplitN(strings.TrimSpace(parts[0]), "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+
+		key := strings.ToLower(strings.TrimSpace(kv[0]))
+		value := strings.TrimSpace(kv[1])
+		if key != "session-id" || value == "" {
+			continue
+		}
+		if len(value) > 255 {
+			if logger != nil {
+				logger.Warn("session-id exceeds 255 chars, ignoring: length=%d, prefix=%s", len(value), value[:255])
+			}
+			continue
+		}
+		return value
+	}
+	return ""
+}
+
+// ConvertToKoutakuContext converts a FastHTTP RequestCtx to a Koutaku context,
+// preserving important header values for monitoring and tracing purposes.
+//
+// The function processes several types of special headers:
+// 1. Prometheus Headers (x-bf-prom-*):
+//   - All headers prefixed with 'x-bf-prom-' are copied to the context
+//   - The prefix is stripped and the remainder becomes the context key
+//   - Example: 'x-bf-prom-latency' becomes 'latency' in the context
+//
+// 2. Koutaku tracing Headers (x-bf-koutaku-*):
+//   - Specifically handles 'x-bf-koutaku-traceID' and 'x-bf-koutaku-generationID'
+//   - These headers enable trace correlation across service boundaries
+//   - Values are stored using Koutaku's context keys for consistency
+//
+// 3. MCP Headers (x-bf-mcp-*):
+//   - Specifically handles 'x-bf-mcp-include-clients' and 'x-bf-mcp-include-tools' (include-only filtering)
+//   - These headers enable MCP client and tool filtering
+//   - Values are stored using MCP context keys for consistency
+//
+// 4. Governance Headers:
+//   - x-bf-vk: Virtual key for governance (required for governance to work)
+//
+// 5. API Key Headers:
+//   - Authorization: Bearer token format only (e.g., "Bearer sk-...") - OpenAI style
+//   - x-api-key: Direct API key value - Anthropic style
+//   - x-goog-api-key: Direct API key value - Google Gemini style
+// 	 - x-bf-api-key references a stored API key name rather than the raw secret.
+//   - Keys are extracted and stored in the context using schemas.KoutakuContextKey
+//   - This enables explicit key usage for requests via headers
+//
+// 6. Cancellable Context:
+//   - Creates a cancellable context that can be used to cancel upstream requests when clients disconnect
+//   - This is critical for streaming requests where write errors indicate client disconnects
+//   - Also useful for non-streaming requests to allow provider-level cancellation
+//
+// 7. Extra Headers (x-bf-eh-*):
+//   - Any header starting with 'x-bf-eh-' is collected and added to the map stored under schemas.KoutakuContextKeyExtraHeaders
+//   - The prefix is stripped, the remainder is lower-cased, and duplicate names append values
+//   - This allows callers to send arbitrary context metadata without needing to extend the public schema
+//
+// 8. Session Stickiness Headers:
+//   - x-bf-session-id: Session identifier for key binding (reuse same key across requests)
+//   - x-bf-session-ttl: Per-request TTL override (duration string e.g. "30m" or seconds integer)
+//
+// 9. Raw Capture Headers (per-request override of provider config; accepts "true" or "false"):
+//   - x-bf-send-back-raw-request: include raw provider request in the KoutakuResponse returned to the caller
+//   - x-bf-send-back-raw-response: include raw provider response in the KoutakuResponse returned to the caller
+//   - x-bf-store-raw-request-response: capture raw request/response for logging only (stripped from client response)
+
+// Parameters:
+//   - ctx: The FastHTTP request context containing the original headers
+//   - allowDirectKeys: Whether to allow direct API key usage from headers
+//
+// Returns:
+//   - *context.Context: A new cancellable context.Context containing the propagated values
+//   - context.CancelFunc: Function to cancel the context (should be called when request completes)
+//
+// Example Usage:
+//
+//	fastCtx := &fasthttp.RequestCtx{...}
+//	koutakuCtx, cancel := ConvertToKoutakuContext(fastCtx, true, nil)
+//	defer cancel() // Ensure cleanup
+//	// koutakuCtx now contains propagated header values including Prometheus metrics,
+//	// Koutaku tracing data, MCP filters, governance keys, API keys, cache settings,
+//	// session stickiness, and extra headers
+
+func ConvertToKoutakuContext(ctx *fasthttp.RequestCtx, allowDirectKeys bool, matcher *HeaderMatcher, mcpHeaderCombinedAllowlist schemas.WhiteList) (*schemas.KoutakuContext, context.CancelFunc) {
+	// Reuse a shared request-scoped context when available.
+	var koutakuCtx *schemas.KoutakuContext
+	var cancel context.CancelFunc
+	if existing, ok := ctx.UserValue(FastHTTPUserValueKoutakuContext).(*schemas.KoutakuContext); ok && existing != nil {
+		if existingCancel, ok := ctx.UserValue(FastHTTPUserValueKoutakuCancel).(context.CancelFunc); ok && existingCancel != nil {
+			koutakuCtx = existing
+			cancel = existingCancel
+		} else {
+			// Create one cancellable child context and promote it as the shared context.
+			koutakuCtx, cancel = schemas.NewKoutakuContextWithCancel(existing)
+			ctx.SetUserValue(FastHTTPUserValueKoutakuContext, koutakuCtx)
+			ctx.SetUserValue(FastHTTPUserValueKoutakuCancel, cancel)
+		}
+	}
+	if koutakuCtx == nil {
+		// Create cancellable context for requests that don't have a shared context yet.
+		parent := context.Context(ctx)
+		func() {
+			// Zero-value fasthttp.RequestCtx can panic on Done(); fall back safely.
+			defer func() {
+				if recover() != nil {
+					parent = context.Background()
+				}
+			}()
+			_ = ctx.Done()
+		}()
+		koutakuCtx, cancel = schemas.NewKoutakuContextWithCancel(parent)
+		ctx.SetUserValue(FastHTTPUserValueKoutakuContext, koutakuCtx)
+		ctx.SetUserValue(FastHTTPUserValueKoutakuCancel, cancel)
+	}
+
+	// Preserve existing request-id if already present on the shared context.
+	if existingRequestID, ok := koutakuCtx.Value(schemas.KoutakuContextKeyRequestID).(string); !ok || existingRequestID == "" {
+		// First, check if x-request-id header exists
+		requestID := string(ctx.Request.Header.Peek("x-request-id"))
+		if requestID == "" {
+			requestID = uuid.New().String()
+		}
+		koutakuCtx.SetValue(schemas.KoutakuContextKeyRequestID, requestID)
+	}
+	// Populating all user values from the request context
+	ctx.VisitUserValuesAll(func(key, value any) {
+		koutakuCtx.SetValue(key, value)
+	})
+	// Initialize extra headers map for headers prefixed with x-bf-eh-
+	extraHeaders := make(map[string][]string)
+	// Initialize extra headers map for headers in the mcp header combined allowlist
+	mcpExtraHeaders := make(map[string][]string)
+	// Security denylist of header names that should never be accepted (case-insensitive)
+	// This denylist is always enforced regardless of user configuration
+	securityDenylist := map[string]bool{
+		"proxy-authorization": true,
+		"cookie":              true,
+		"host":                true,
+		"content-length":      true,
+		"connection":          true,
+		"transfer-encoding":   true,
+
+		// prevent auth/key overrides via x-bf-eh-*
+		"x-api-key":       true,
+		"x-goog-api-key":  true,
+		"x-bf-api-key":    true,
+		"x-bf-api-key-id": true,
+		"x-bf-vk":         true,
+	}
+
+	// Debug: Log header matcher state
+	if logger != nil {
+		if matcher != nil {
+			logger.Debug("headerMatcher hasAllowlist=%v, hasDenylist=%v", matcher.HasAllowlist(), matcher.hasDenylist)
+		} else {
+			logger.Debug("headerMatcher is nil (allow all)")
+		}
+	}
+
+	// Then process other headers
+	ctx.Request.Header.All()(func(key, value []byte) bool {
+		keyStr := strings.ToLower(string(key))
+		if keyStr == "baggage" {
+			if sessionID := ParseSessionIDFromBaggage(string(value)); sessionID != "" {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyParentRequestID, sessionID)
+			}
+			return true
+		}
+		if labelName, ok := strings.CutPrefix(keyStr, "x-bf-prom-"); ok {
+			koutakuCtx.SetValue(schemas.KoutakuContextKey(labelName), string(value))
+			return true
+		}
+		// MCP control headers (include-only filtering)
+		if labelName, ok := strings.CutPrefix(keyStr, "x-bf-mcp-"); ok {
+			switch labelName {
+			case "include-clients":
+				fallthrough
+			case "include-tools":
+				// Parse comma-separated values into []string
+				valueStr := string(value)
+				var parsedValues []string
+				if valueStr != "" {
+					// Split by comma and trim whitespace
+					for _, v := range strings.Split(valueStr, ",") {
+						if trimmed := strings.TrimSpace(v); trimmed != "" {
+							parsedValues = append(parsedValues, trimmed)
+						}
+					}
+				} else {
+					parsedValues = []string{""}
+				}
+				koutakuCtx.SetValue(schemas.KoutakuContextKey("mcp-"+labelName), parsedValues)
+				return true
+			}
+		}
+		// Handle virtual key header (x-bf-vk, authorization, x-api-key, x-goog-api-key headers)
+		if keyStr == string(schemas.KoutakuContextKeyVirtualKey) {
+			koutakuCtx.SetValue(schemas.KoutakuContextKeyVirtualKey, string(value))
+			return true
+		}
+		if keyStr == "authorization" {
+			valueStr := string(value)
+			// Only accept Bearer token format: "Bearer ..."
+			if strings.HasPrefix(strings.ToLower(valueStr), "bearer ") {
+				authHeaderValue := strings.TrimSpace(valueStr[7:]) // Remove "Bearer " prefix
+				if authHeaderValue != "" && strings.HasPrefix(strings.ToLower(authHeaderValue), governance.VirtualKeyPrefix) {
+					koutakuCtx.SetValue(schemas.KoutakuContextKeyVirtualKey, authHeaderValue)
+					return true
+				}
+			}
+		}
+		if keyStr == "x-api-key" && strings.HasPrefix(strings.ToLower(string(value)), governance.VirtualKeyPrefix) {
+			koutakuCtx.SetValue(schemas.KoutakuContextKeyVirtualKey, string(value))
+			return true
+		}
+		if keyStr == "x-goog-api-key" && strings.HasPrefix(strings.ToLower(string(value)), governance.VirtualKeyPrefix) {
+			koutakuCtx.SetValue(schemas.KoutakuContextKeyVirtualKey, string(value))
+			return true
+		}
+		if keyStr == "x-bf-api-key" {
+			if keyName := strings.TrimSpace(string(value)); keyName != "" {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyAPIKeyName, keyName)
+			}
+			return true
+		}
+		if keyStr == "x-bf-api-key-id" {
+			if keyID := strings.TrimSpace(string(value)); keyID != "" {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyAPIKeyID, keyID)
+			}
+			return true
+		}
+		// Handle cache key header (x-bf-cache-key)
+		if keyStr == "x-bf-cache-key" {
+			koutakuCtx.SetValue(semanticcache.CacheKey, string(value))
+			return true
+		}
+		// Handle cache TTL header (x-bf-cache-ttl)
+		if keyStr == "x-bf-cache-ttl" {
+			valueStr := string(value)
+			var ttlDuration time.Duration
+			var err error
+
+			// First try to parse as duration (e.g., "30s", "5m", "1h")
+			if ttlDuration, err = time.ParseDuration(valueStr); err != nil {
+				// If that fails, try to parse as plain number and treat as seconds
+				if seconds, parseErr := strconv.Atoi(valueStr); parseErr == nil && seconds > 0 {
+					ttlDuration = time.Duration(seconds) * time.Second
+					err = nil // Reset error since we successfully parsed as seconds
+				}
+			}
+
+			if err == nil {
+				koutakuCtx.SetValue(semanticcache.CacheTTLKey, ttlDuration)
+			}
+			// If both parsing attempts fail, we silently ignore the header and use default TTL
+			return true
+		}
+		// Cache threshold header
+		if keyStr == "x-bf-cache-threshold" {
+			threshold, err := strconv.ParseFloat(string(value), 64)
+			if err == nil {
+				// Clamp threshold to the inclusive range [0.0, 1.0]
+				if threshold < 0.0 {
+					threshold = 0.0
+				} else if threshold > 1.0 {
+					threshold = 1.0
+				}
+				koutakuCtx.SetValue(semanticcache.CacheThresholdKey, threshold)
+			}
+			// If parsing fails, silently ignore the header (no context value set)
+			return true
+		}
+		// Cache type header
+		if keyStr == "x-bf-cache-type" {
+			koutakuCtx.SetValue(semanticcache.CacheTypeKey, semanticcache.CacheType(string(value)))
+			return true
+		}
+		// Cache no store header
+		if keyStr == "x-bf-cache-no-store" {
+			if valueStr := string(value); valueStr == "true" {
+				koutakuCtx.SetValue(semanticcache.CacheNoStoreKey, true)
+			}
+			return true
+		}
+		// Session stickiness: session ID for key binding
+		if keyStr == "x-bf-session-id" {
+			if valueStr := strings.TrimSpace(string(value)); valueStr != "" {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeySessionID, valueStr)
+			}
+			return true
+		}
+		// Session stickiness: per-request TTL override (duration string or seconds integer)
+		if keyStr == "x-bf-session-ttl" {
+			valueStr := strings.TrimSpace(string(value))
+			var ttlDuration time.Duration
+			var err error
+			if ttlDuration, err = time.ParseDuration(valueStr); err != nil {
+				if seconds, parseErr := strconv.Atoi(valueStr); parseErr == nil && seconds > 0 {
+					ttlDuration = time.Duration(seconds) * time.Second
+					err = nil
+				}
+			}
+			if err == nil && ttlDuration > 0 {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeySessionTTL, ttlDuration)
+			}
+			return true
+		}
+		if labelName, ok := strings.CutPrefix(keyStr, "x-bf-eh-"); ok {
+			// Skip empty header names after prefix removal
+			if labelName == "" {
+				return true
+			}
+			// Normalize header name to lowercase
+			labelName = strings.ToLower(labelName)
+			// Validate against security denylist (always enforced)
+			if securityDenylist[labelName] {
+				return true
+			}
+			// Apply configurable header filter
+			if !matcher.ShouldAllow(labelName) {
+				return true
+			}
+			// Append header value (allow multiple values for the same header)
+			extraHeaders[labelName] = append(extraHeaders[labelName], string(value))
+			return true
+		}
+		// Direct header forwarding: when allowlist is configured, any header explicitly
+		// in the allowlist can be forwarded directly without the x-bf-eh- prefix.
+		// This enables forwarding arbitrary headers like "anthropic-beta" directly.
+		// Only applies when allowlist is non-empty (backward compatible).
+		if matcher.HasAllowlist() {
+			if matcher.MatchesAllow(keyStr) {
+				// Skip reserved x-bf-* headers (handled separately)
+				if strings.HasPrefix(keyStr, "x-bf-") {
+					return true
+				}
+				// Validate against security denylist (always enforced)
+				if securityDenylist[keyStr] {
+					return true
+				}
+				// Check denylist
+				if matcher.MatchesDeny(keyStr) {
+					return true
+				}
+				// Forward the header directly with its original name
+				if logger != nil {
+					logger.Debug("forwarding header via allowlist: %s", keyStr)
+				}
+				extraHeaders[keyStr] = append(extraHeaders[keyStr], string(value))
+				return true
+			}
+		}
+		// Handle MCP extra headers
+		if mcpHeaderCombinedAllowlist.IsAllowed(keyStr) {
+			mcpExtraHeaders[keyStr] = append(mcpExtraHeaders[keyStr], string(value))
+			return true
+		}
+		// Raw capture headers — all three support "true"/"false" to fully override the
+		// provider-level config for this request.
+		if keyStr == "x-bf-send-back-raw-request" {
+			if b, err := strconv.ParseBool(string(value)); err == nil {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeySendBackRawRequest, b)
+			}
+			return true
+		}
+		if keyStr == "x-bf-send-back-raw-response" {
+			if b, err := strconv.ParseBool(string(value)); err == nil {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeySendBackRawResponse, b)
+			}
+			return true
+		}
+		if keyStr == "x-bf-store-raw-request-response" {
+			if b, err := strconv.ParseBool(string(value)); err == nil {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyStoreRawRequestResponse, b)
+			}
+			return true
+		}
+		// Parent request ID header (for linking MCP tool calls to parent LLM requests)
+		if keyStr == "x-bf-parent-request-id" {
+			if valueStr := strings.TrimSpace(string(value)); valueStr != "" {
+				koutakuCtx.SetValue(schemas.KoutakuMCPAgentOriginalRequestID, valueStr)
+			}
+			return true
+		}
+		// Add passthrough extra params header support
+		if keyStr == "x-bf-passthrough-extra-params" {
+			if valueStr := string(value); valueStr == "true" {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyPassthroughExtraParams, true)
+			}
+			return true
+		}
+
+		// Compat header: per-request override of compat plugin settings.
+		// Accepts: "true" (enable all), JSON array of feature names, or ["*"] (enable all).
+		// An empty array [] or absent header means no overrides.
+		if keyStr == "x-bf-compat" {
+			koutakuCtx.ClearValue(schemas.KoutakuContextKeyCompatConvertTextToChat)
+			koutakuCtx.ClearValue(schemas.KoutakuContextKeyCompatConvertChatToResponses)
+			koutakuCtx.ClearValue(schemas.KoutakuContextKeyCompatShouldDropParams)
+			koutakuCtx.ClearValue(schemas.KoutakuContextKeyCompatShouldConvertParams)
+			valueStr := strings.TrimSpace(string(value))
+			if valueStr == "true" {
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatConvertTextToChat, true)
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatConvertChatToResponses, true)
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatShouldDropParams, true)
+				koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatShouldConvertParams, true)
+			} else if strings.HasPrefix(valueStr, "[") {
+				var features []string
+				if err := json.Unmarshal([]byte(valueStr), &features); err == nil {
+					if len(features) == 1 && features[0] == "*" {
+						koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatConvertTextToChat, true)
+						koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatConvertChatToResponses, true)
+						koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatShouldDropParams, true)
+						koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatShouldConvertParams, true)
+					} else {
+						for _, f := range features {
+							switch f {
+							case "convert_text_to_chat":
+								koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatConvertTextToChat, true)
+							case "convert_chat_to_responses":
+								koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatConvertChatToResponses, true)
+							case "should_drop_params":
+								koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatShouldDropParams, true)
+							case "should_convert_params":
+								koutakuCtx.SetValue(schemas.KoutakuContextKeyCompatShouldConvertParams, true)
+							}
+						}
+					}
+				}
+			}
+			return true
+		}
+		return true
+	})
+
+	// Store collected extra headers in the context if any were found
+	if len(extraHeaders) > 0 {
+		koutakuCtx.SetValue(schemas.KoutakuContextKeyExtraHeaders, extraHeaders)
+	}
+
+	// Store collected MCP extra headers in the context if any were found
+	if len(mcpExtraHeaders) > 0 {
+		koutakuCtx.SetValue(schemas.KoutakuContextKeyMCPExtraHeaders, mcpExtraHeaders)
+	}
+
+	// Collect all request headers for downstream use (e.g., governance required headers check)
+	// Keys are lowercased for case-insensitive lookup
+	allHeaders := make(map[string]string)
+	ctx.Request.Header.All()(func(key, value []byte) bool {
+		allHeaders[strings.ToLower(string(key))] = string(value)
+		return true
+	})
+	koutakuCtx.SetValue(schemas.KoutakuContextKeyRequestHeaders, allHeaders)
+
+	// Extract per-user MCP OAuth user identifier from X-Bf-User-Id header
+	if mcpUserID := string(ctx.Request.Header.Peek("X-Bf-User-Id")); mcpUserID != "" {
+		koutakuCtx.SetValue(schemas.KoutakuContextKeyMCPUserID, mcpUserID)
+	}
+
+	// Build and set OAuth redirect URI for per-user OAuth flows
+	scheme := "http"
+	if ctx.IsTLS() || string(ctx.Request.Header.Peek("X-Forwarded-Proto")) == "https" {
+		scheme = "https"
+	}
+	host := string(ctx.Host())
+	if host != "" {
+		koutakuCtx.SetValue(schemas.KoutakuContextKeyOAuthRedirectURI, fmt.Sprintf("%s://%s/api/oauth/callback", scheme, host))
+	}
+
+	if allowDirectKeys {
+		// Extract API key from Authorization header (Bearer format), x-api-key, or x-goog-api-key header
+		var apiKey string
+
+		// TODO: fix plugin data leak
+		// Check Authorization header (Bearer format only - OpenAI style)
+		authHeader := string(ctx.Request.Header.Peek("Authorization"))
+		if authHeader != "" {
+			// Only accept Bearer token format: "Bearer ..."
+			if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+				authHeaderValue := strings.TrimSpace(authHeader[7:]) // Remove "Bearer " prefix
+				if authHeaderValue != "" && !strings.HasPrefix(strings.ToLower(authHeaderValue), governance.VirtualKeyPrefix) {
+					apiKey = authHeaderValue
+				}
+			} else {
+				apiKey = authHeader
+			}
+		}
+
+		if apiKey == "" {
+			// Check x-api-key (Anthropic style) header if no valid Authorization header found
+			xAPIKey := string(ctx.Request.Header.Peek("x-api-key"))
+			if xAPIKey != "" && !strings.HasPrefix(strings.ToLower(xAPIKey), governance.VirtualKeyPrefix) {
+				apiKey = strings.TrimSpace(xAPIKey)
+			} else {
+				// Check x-goog-api-key (Google Gemini style) header if no valid Authorization header found
+				xGoogleAPIKey := string(ctx.Request.Header.Peek("x-goog-api-key"))
+				if xGoogleAPIKey != "" && !strings.HasPrefix(strings.ToLower(xGoogleAPIKey), governance.VirtualKeyPrefix) {
+					apiKey = strings.TrimSpace(xGoogleAPIKey)
+				}
+			}
+		}
+
+		// If we found an API key, create a Key object and store it in context
+		if apiKey != "" {
+			key := schemas.Key{
+				ID:     "header-provided", // Identifier for header-provided keys
+				Value:  *schemas.NewEnvVar(apiKey),
+				Models: schemas.WhiteList{"*"}, // Allow all models
+				Weight: 1.0,                    // Default weight
+			}
+			koutakuCtx.SetValue(schemas.KoutakuContextKeyDirectKey, key)
+		}
+	}
+	return koutakuCtx, cancel
+}
+
+// BuildHTTPRequestFromFastHTTP creates an HTTPRequest from fasthttp context for streaming handlers.
+// The returned request should be released with schemas.ReleaseHTTPRequest when done.
+// Note: Body is not copied for streaming (body was already consumed for the request).
+func BuildHTTPRequestFromFastHTTP(ctx *fasthttp.RequestCtx) *schemas.HTTPRequest {
+	req := schemas.AcquireHTTPRequest()
+	req.Method = string(ctx.Method())
+	req.Path = string(ctx.Path())
+
+	// Copy headers
+	for key, value := range ctx.Request.Header.All() {
+		req.Headers[string(key)] = string(value)
+	}
+
+	// Copy query params
+	for key, value := range ctx.Request.URI().QueryArgs().All() {
+		req.Query[string(key)] = string(value)
+	}
+
+	// Copy path parameters from user values
+	ctx.VisitUserValuesAll(func(key, value any) {
+		keyStr, keyIsString := key.(string)
+		valueStr, valueIsString := value.(string)
+		if !keyIsString || !valueIsString {
+			return
+		}
+		if strings.HasPrefix(keyStr, "koutaku-") ||
+			keyStr == "KoutakuContextKeyRequestID" ||
+			keyStr == "trace_id" ||
+			keyStr == "span_id" {
+			return
+		}
+		req.PathParams[keyStr] = valueStr
+	})
+
+	// Note: Body not copied - for streaming, body was already consumed
+	return req
+}
+
+// BuildHTTPResponseFromFastHTTP creates an HTTPResponse snapshot from fasthttp context.
+// Only captures status code and headers — body is skipped because for streaming
+// responses it is an active io.Reader that cannot be materialized.
+// The returned response should be released with schemas.ReleaseHTTPResponse when done.
+func BuildHTTPResponseFromFastHTTP(ctx *fasthttp.RequestCtx) *schemas.HTTPResponse {
+	resp := schemas.AcquireHTTPResponse()
+	resp.StatusCode = ctx.Response.StatusCode()
+	for key, value := range ctx.Response.Header.All() {
+		resp.Headers[string(key)] = string(value)
+	}
+	return resp
+}

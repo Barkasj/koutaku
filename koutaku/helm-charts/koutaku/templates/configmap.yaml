@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "koutaku.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "koutaku.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {{- include "koutaku.config" . | nindent 4 }}

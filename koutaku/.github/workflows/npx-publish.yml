@@ -1,0 +1,302 @@
+name: NPX Package Publish
+
+# Triggers when main is pushed and package.json has changed
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'npx/koutaku/package.json'
+      - 'npx/koutaku-cli/package.json'
+
+# Prevent concurrent runs for the same trigger
+concurrency:
+  group: npx-publish-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Check if pipeline should be skipped based on first line of commit message
+  check-skip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      should-skip: ${{ steps.check.outputs.should-skip }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check if pipeline should be skipped
+        id: check        
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          FIRST_LINE=$(echo "$COMMIT_MESSAGE" | head -n 1)
+          if [[ "$FIRST_LINE" == *"--skip-ci"* ]]; then
+            echo "should-skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should-skip=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish-koutaku:
+    needs: [check-skip]
+    if: needs.check-skip.outputs.should-skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # Required for npm provenance
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "25"
+          registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: |
+            npx/koutaku/package-lock.json
+
+      - name: Check if koutaku package.json changed
+        id: check-koutaku
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -q '^npx/koutaku/package.json$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract version from package.json
+        if: steps.check-koutaku.outputs.changed == 'true'
+        id: extract-version
+        run: ./.github/workflows/scripts/extract-npx-version.sh
+
+      - name: Install dependencies
+        if: steps.check-koutaku.outputs.changed == 'true'
+        working-directory: npx/koutaku
+        run: npm ci
+
+      - name: Run tests
+        if: steps.check-koutaku.outputs.changed == 'true'
+        working-directory: npx/koutaku
+        run: |
+          if [ -f "package.json" ] && npm run | grep -q "test"; then
+            echo "Running tests..."
+            npm test
+          else
+            echo "No tests found, skipping..."
+          fi
+
+      - name: Publish to npm
+        if: steps.check-koutaku.outputs.changed == 'true'
+        working-directory: npx/koutaku
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          echo "Publishing @koutaku/koutaku@${VERSION} to npm..."
+          if npm view @koutaku/koutaku@"${VERSION}" version >/dev/null 2>&1; then
+            echo "@koutaku/koutaku@${VERSION} already exists on npm. Skipping publish."
+            exit 0
+          fi
+          
+          # Try OIDC (Trusted Publishing) first - no token needed
+          echo "Attempting publish with OIDC (Trusted Publishing)..."
+          if npm publish --provenance --access public 2>&1; then
+            echo "Published successfully with OIDC!"
+            exit 0
+          fi
+          
+          # Fallback to NPM_TOKEN if OIDC fails
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "OIDC failed, falling back to NPM_TOKEN..."
+            export NODE_AUTH_TOKEN="$NPM_TOKEN"
+            npm publish --access public
+          else
+            echo "OIDC failed and no NPM_TOKEN available"
+            exit 1
+          fi
+
+      - name: Configure Git
+        if: steps.check-koutaku.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create GitHub Release
+        if: steps.check-koutaku.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/workflows/scripts/create-npx-release.sh "${{ steps.extract-version.outputs.version }}" "${{ steps.extract-version.outputs.full-tag }}"
+
+      - name: Discord Notification
+        if: always() && steps.check-koutaku.outputs.changed == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          AUTHOR="${{ github.actor }}"
+          COMMIT_AUTHOR="$(git log -1 --pretty=%an || true)"
+          if [ -n "$COMMIT_AUTHOR" ]; then AUTHOR="$COMMIT_AUTHOR"; fi
+          if [ "${{ job.status }}" = "success" ]; then
+            TITLE="**NPX Package Published**"
+            STATUS="Success"
+            VERSION_LINE="**Version**: \`${{ steps.extract-version.outputs.version }}\`"
+            PACKAGE_LINE="**Package**: \`@koutaku/koutaku\`"
+            NPM_LINK="**[View on npm](https://www.npmjs.com/package/@koutaku/koutaku)**"
+            MESSAGE="$TITLE\n**Status**: $STATUS\n$VERSION_LINE\n$PACKAGE_LINE\n$NPM_LINK\n**Tag**: \`${{ steps.extract-version.outputs.full-tag }}\`\n**Commit**: \`${{ github.sha }}\`\n**Author**: ${AUTHOR}\n**[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**"
+          else
+            TITLE="**NPX Package Publish Failed**"
+            STATUS="Failed"
+            MESSAGE="$TITLE\n**Status**: $STATUS\n**Tag**: \`${{ steps.extract-version.outputs.full-tag }}\`\n**Commit**: \`${{ github.sha }}\`\n**Author**: ${AUTHOR}\n**[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**"
+          fi
+          payload="$(jq -n --arg content "$MESSAGE" '{content:$content}')"
+          curl -sS -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"
+
+  publish-koutaku-cli:
+    needs: [check-skip]
+    if: needs.check-skip.outputs.should-skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write # Required for npm provenance
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "25"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check if koutaku-cli package.json changed
+        id: check-cli
+        run: |
+          if git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep -q '^npx/koutaku-cli/package.json$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract version
+        if: steps.check-cli.outputs.changed == 'true'
+        id: extract-version
+        run: |
+          VERSION=$(jq -r '.version' npx/koutaku-cli/package.json)
+          if [[ -z "$VERSION" ]] || [[ "$VERSION" == "null" ]]; then
+            echo "Failed to extract version from npx/koutaku-cli/package.json"
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "full-tag=npx/koutaku-cli/v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Extracted koutaku-cli version: ${VERSION}"
+
+      - name: Publish to npm
+        if: steps.check-cli.outputs.changed == 'true'
+        working-directory: npx/koutaku-cli
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          echo "Publishing @koutaku/koutaku-cli@${VERSION} to npm..."
+          if npm view @koutaku/koutaku-cli@"${VERSION}" version >/dev/null 2>&1; then
+            echo "@koutaku/koutaku-cli@${VERSION} already exists on npm. Skipping publish."
+            exit 0
+          fi
+          
+          # Try OIDC (Trusted Publishing) first - no token needed
+          echo "Attempting publish with OIDC (Trusted Publishing)..."
+          if npm publish --provenance --access public 2>&1; then
+            echo "Published successfully with OIDC!"
+            exit 0
+          fi
+          
+          # Fallback to NPM_TOKEN if OIDC fails
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "OIDC failed, falling back to NPM_TOKEN..."
+            export NODE_AUTH_TOKEN="$NPM_TOKEN"
+            npm publish --access public
+          else
+            echo "OIDC failed and no NPM_TOKEN available"
+            exit 1
+          fi
+
+      - name: Configure Git
+        if: steps.check-cli.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create GitHub Release
+        if: steps.check-cli.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.extract-version.outputs.version }}"
+          FULL_TAG="${{ steps.extract-version.outputs.full-tag }}"
+          PRERELEASE_FLAG=""
+          if [[ "$VERSION" == *-* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          if gh release view "$FULL_TAG" >/dev/null 2>&1; then
+            echo "Release $FULL_TAG already exists. Skipping."
+            exit 0
+          fi
+          if ! git rev-parse "$FULL_TAG" >/dev/null 2>&1; then
+            git tag "$FULL_TAG"
+            git push origin "$FULL_TAG"
+          fi
+          gh release create "$FULL_TAG" \
+            --title "Koutaku CLI v$VERSION" \
+            --notes "## Koutaku CLI v$VERSION
+
+          Install or run via npx:
+
+          \`\`\`bash
+          npx -y @koutaku/koutaku-cli
+          \`\`\`
+
+          - [View on npm](https://www.npmjs.com/package/@koutaku/koutaku-cli)
+          - [Documentation](https://docs.getkoutaku.ai/quickstart/cli/getting-started)" \
+            --latest=false \
+            ${PRERELEASE_FLAG}
+
+      - name: Discord Notification
+        if: always() && steps.check-cli.outputs.changed == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          AUTHOR="${{ github.actor }}"
+          COMMIT_AUTHOR="$(git log -1 --pretty=%an || true)"
+          if [ -n "$COMMIT_AUTHOR" ]; then AUTHOR="$COMMIT_AUTHOR"; fi
+          if [ "${{ job.status }}" = "success" ]; then
+            MESSAGE="**NPX Koutaku CLI Published**\n**Status**: Success\n**Version**: \`${{ steps.extract-version.outputs.version }}\`\n**Package**: \`@koutaku/koutaku-cli\`\n**[View on npm](https://www.npmjs.com/package/@koutaku/koutaku-cli)**\n**Commit**: \`${{ github.sha }}\`\n**Author**: ${AUTHOR}\n**[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**"
+          else
+            MESSAGE="**NPX Koutaku CLI Publish Failed**\n**Status**: Failed\n**Commit**: \`${{ github.sha }}\`\n**Author**: ${AUTHOR}\n**[View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**"
+          fi
+          payload="$(jq -n --arg content "$MESSAGE" '{content:$content}')"
+          curl -sS -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK"

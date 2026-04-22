@@ -1,0 +1,54 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: koutaku-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - koutaku-1
+      - koutaku-2
+      - koutaku-3
+    restart: unless-stopped
+
+  koutaku-1:
+    image: koutaku/koutaku:latest
+    container_name: koutaku-1
+    env_file:
+      - .env
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - koutaku_data_1:/app/data
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  koutaku-2:
+    image: koutaku/koutaku:latest
+    container_name: koutaku-2
+    env_file:
+      - .env
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - koutaku_data_2:/app/data
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  koutaku-3:
+    image: koutaku/koutaku:latest
+    container_name: koutaku-3
+    env_file:
+      - .env
+    volumes:
+      - ./config.json:/app/config.json:ro
+      - koutaku_data_3:/app/data
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+volumes:
+  koutaku_data_1:
+  koutaku_data_2:
+  koutaku_data_3:

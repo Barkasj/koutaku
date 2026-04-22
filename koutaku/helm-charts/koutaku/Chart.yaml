@@ -1,0 +1,19 @@
+apiVersion: v2
+name: koutaku
+description: A Helm chart for deploying Koutaku - AI Gateway with unified interface for multiple providers
+type: application
+version: 2.1.4
+appVersion: "1.5.0-prerelease5"
+keywords:
+  - ai
+  - gateway
+  - llm
+  - openai
+  - anthropic
+home: https://www.koutaku.ai/koutaku
+sources:
+  - https://github.com/koutaku/koutaku
+maintainers:
+  - name: Koutaku Team
+    email: support@getkoutaku.ai
+icon: https://www.getkoutaku.ai/favicon.png
