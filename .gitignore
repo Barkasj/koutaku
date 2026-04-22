@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Editor
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Node
+node_modules/
+
+# Go
+tmp/
+
+# Environment
+.env
+.env.local
+
+# Build
+dist/
+out/

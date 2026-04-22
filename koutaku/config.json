@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "gateway": {
+    "host": "localhost",
+    "port": 8080,
+    "log_level": "info",
+    "log_style": "json"
+  },
+  "providers": [],
+  "routes": [],
+  "plugins": {}
+}

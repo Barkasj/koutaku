@@ -1,40 +1,19 @@
 # TOOLS.md - Local Notes
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## Project
 
-## What Goes Here
+- **Koutaku AI Gateway** - Go backend + React/TypeScript UI
+- **Go modules:** core/, framework/, cli/, transports/
+- **UI:** ui/ (React 19 + Vite + Tailwind CSS 4)
+- **Dev server:** `pulse.yaml` config, port 8080
 
-Things like:
+## Build
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+- Go: `make build` or check Makefile
+- UI: `cd ui && npm run dev`
+- Full: see pulse.yaml for dev workflow
 
-## Examples
+## Git
 
-```markdown
-### Cameras
-
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
-
-### SSH
-
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
-```
-
-## Why Separate?
-
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
-
----
-
-Add whatever helps you do your job. This is your cheat sheet.
+- Origin: https://github.com/Barkasj/koutaku
+- Branch: main
