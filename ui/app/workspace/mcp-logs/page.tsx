@@ -431,13 +431,13 @@ export default function MCPLogsPage() {
 			},
 			{
 				title: "Success Rate",
-				value: <NumberFlow value={stats?.success_rate ?? 0} format={{ minimumFractionDigits: 2, koutakuumFractionDigits: 2 }} suffix="%" />,
+				value: <NumberFlow value={stats?.success_rate ?? 0} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} suffix="%" />,
 				icon: <CheckCircle className="size-4" />,
 			},
 			{
 				title: "Avg Latency",
 				value: (
-					<NumberFlow value={stats?.average_latency ?? 0} format={{ minimumFractionDigits: 2, koutakuumFractionDigits: 2 }} suffix="ms" />
+					<NumberFlow value={stats?.average_latency ?? 0} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} suffix="ms" />
 				),
 				icon: <Clock className="size-4" />,
 			},

@@ -79,7 +79,6 @@ func TestToCohereEmbeddingRequestBodyIncludesModelForDirectCohere(t *testing.T) 
 		func() (providerUtils.RequestBodyWithExtraParams, error) {
 			return ToCohereEmbeddingRequest(koutakuReq), nil
 		},
-		schemas.Cohere,
 	)
 	require.Nil(t, koutakuErr)
 	assert.JSONEq(t, `{

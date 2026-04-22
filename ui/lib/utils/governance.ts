@@ -35,7 +35,7 @@ export function formatCurrency(dollars: number) {
  */
 const compactNumberFormatter = new Intl.NumberFormat(undefined, {
 	notation: "compact",
-	koutakuumFractionDigits: 1,
+	maximumFractionDigits: 1,
 });
 
 export function formatCompactNumber(n: number): string {

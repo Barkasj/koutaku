@@ -28,7 +28,7 @@ import {
 
 const requestFormatter = new Intl.NumberFormat("en-US", {
   notation: "compact",
-  koutakuumFractionDigits: 1,
+  maximumFractionDigits: 1,
 });
 
 function formatRequest(requests: number): string {

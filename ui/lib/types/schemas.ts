@@ -830,31 +830,31 @@ export const otelFormSchema = z
 		}
 	});
 
-// Koutaku Configuration Schema
-export const koutakuConfigSchema = z.object({
+// Maxim Configuration Schema
+export const maximConfigSchema = z.object({
 	api_key: z.string().default(""),
 	log_repo_id: z.string().optional(),
 });
 
-// Koutaku form schema for the KoutakuFormFragment
-export const koutakuFormSchema = z
+// Maxim form schema for the MaximFormFragment
+export const maximFormSchema = z
 	.object({
 		enabled: z.boolean().default(true),
-		koutaku_config: koutakuConfigSchema,
+		maxim_config: maximConfigSchema,
 	})
 	.superRefine((data, ctx) => {
 		if (data.enabled) {
-			const apiKey = (data.koutaku_config.api_key || "").trim();
+			const apiKey = (data.maxim_config.api_key || "").trim();
 			if (!apiKey) {
 				ctx.addIssue({
 					code: "custom",
-					path: ["koutaku_config", "api_key"],
+					path: ["maxim_config", "api_key"],
 					message: "API key is required",
 				});
 			} else if (!apiKey.startsWith("sk_mx_")) {
 				ctx.addIssue({
 					code: "custom",
-					path: ["koutaku_config", "api_key"],
+					path: ["maxim_config", "api_key"],
 					message: "API key must start with 'sk_mx_'",
 				});
 			}
@@ -1095,7 +1095,8 @@ export type ProxyOnlyFormSchema = z.infer<typeof proxyOnlyFormSchema>;
 export type OtelConfigSchema = z.infer<typeof otelConfigSchema>;
 export type OtelFormSchema = z.infer<typeof otelFormSchema>;
 export type KoutakuConfigSchema = z.infer<typeof koutakuConfigSchema>;
-export type KoutakuFormSchema = z.infer<typeof koutakuFormSchema>;
+export type MaximConfigSchema = z.infer<typeof maximConfigSchema>;
+export type MaximFormSchema = z.infer<typeof maximFormSchema>;
 export type PrometheusConfigSchema = z.infer<typeof prometheusConfigSchema>;
 export type PrometheusFormSchema = z.infer<typeof prometheusFormSchema>;
 export type NetworkOnlyFormSchema = z.infer<typeof networkOnlyFormSchema>;

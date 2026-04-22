@@ -7,7 +7,7 @@ import { useQueryState } from "nuqs";
 import { useEffect, useMemo } from "react";
 import BigQueryView from "./plugins/bigqueryView";
 import DatadogView from "./plugins/datadogView";
-import KoutakuView from "./plugins/koutakuView";
+import KoutakuView from "./plugins/maximView";
 import NewrelicView from "./plugins/newRelicView";
 import OtelView from "./plugins/otelView";
 import PrometheusView from "./plugins/prometheusView";

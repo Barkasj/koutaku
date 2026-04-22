@@ -3,7 +3,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { koutakuFormSchema, type KoutakuFormSchema } from "@/lib/types/schemas";
+import { maximFormSchema, type MaximFormSchema } from "@/lib/types/schemas";
 import { RbacOperation, RbacResource, useRbac } from "@enterprise/lib";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
@@ -16,7 +16,7 @@ interface KoutakuFormFragmentProps {
 		api_key?: string;
 		log_repo_id?: string;
 	};
-	onSave: (config: KoutakuFormSchema) => Promise<void>;
+	onSave: (config: MaximFormSchema) => Promise<void>;
 	onDelete?: () => void;
 	isDeleting?: boolean;
 	isLoading?: boolean;
@@ -27,20 +27,20 @@ export function KoutakuFormFragment({ initialConfig, onSave, onDelete, isDeletin
 	const [showApiKey, setShowApiKey] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 
-	const form = useForm<KoutakuFormSchema, any, KoutakuFormSchema>({
-		resolver: zodResolver(koutakuFormSchema) as Resolver<KoutakuFormSchema, any, KoutakuFormSchema>,
+	const form = useForm<MaximFormSchema, any, MaximFormSchema>({
+		resolver: zodResolver(maximFormSchema) as Resolver<MaximFormSchema, any, MaximFormSchema>,
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues: {
 			enabled: initialConfig?.enabled ?? true,
-			koutaku_config: {
+			maxim_config: {
 				api_key: initialConfig?.api_key ?? "",
 				log_repo_id: initialConfig?.log_repo_id ?? "",
 			},
 		},
 	});
 
-	const onSubmit = (data: KoutakuFormSchema) => {
+	const onSubmit = (data: MaximFormSchema) => {
 		setIsSaving(true);
 		onSave(data).finally(() => setIsSaving(false));
 	};
@@ -49,7 +49,7 @@ export function KoutakuFormFragment({ initialConfig, onSave, onDelete, isDeletin
 		// Reset form with new initial config when it changes
 		form.reset({
 			enabled: initialConfig?.enabled ?? true,
-			koutaku_config: {
+			maxim_config: {
 				api_key: initialConfig?.api_key ?? "",
 				log_repo_id: initialConfig?.log_repo_id ?? "",
 			},
@@ -63,7 +63,7 @@ export function KoutakuFormFragment({ initialConfig, onSave, onDelete, isDeletin
 					<div className="grid grid-cols-1 gap-4">
 						<FormField
 							control={form.control}
-							name="koutaku_config.api_key"
+							name="maxim_config.api_key"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>API Key</FormLabel>
@@ -95,7 +95,7 @@ export function KoutakuFormFragment({ initialConfig, onSave, onDelete, isDeletin
 
 						<FormField
 							control={form.control}
-							name="koutaku_config.log_repo_id"
+							name="maxim_config.log_repo_id"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Log Repository ID (Optional)</FormLabel>
@@ -147,7 +147,7 @@ export function KoutakuFormFragment({ initialConfig, onSave, onDelete, isDeletin
 							onClick={() => {
 								form.reset({
 									enabled: initialConfig?.enabled ?? true,
-									koutaku_config: {
+									maxim_config: {
 										api_key: initialConfig?.api_key ?? "",
 										log_repo_id: initialConfig?.log_repo_id ?? "",
 									},

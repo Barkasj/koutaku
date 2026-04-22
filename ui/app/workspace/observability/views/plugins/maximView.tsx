@@ -1,8 +1,8 @@
 import { getErrorMessage, useAppSelector, useUpdatePluginMutation } from "@/lib/store";
-import { KoutakuConfigSchema, KoutakuFormSchema } from "@/lib/types/schemas";
+import { maximConfigSchema, maximFormSchema, type MaximConfigSchema, type MaximFormSchema } from "@/lib/types/schemas";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { KoutakuFormFragment } from "../../fragments/koutakuFormFragment";
+import { KoutakuFormFragment } from "../../fragments/maximFormFragment";
 
 interface KoutakuViewProps {
 	onDelete?: () => void;
@@ -13,17 +13,17 @@ export default function KoutakuView({ onDelete, isDeleting }: KoutakuViewProps) 
 	const selectedPlugin = useAppSelector((state) => state.plugin.selectedPlugin);
 	const [updatePlugin] = useUpdatePluginMutation();
 	const currentConfig = useMemo(
-		() => ({ ...((selectedPlugin?.config as KoutakuConfigSchema) ?? {}), enabled: selectedPlugin?.enabled }),
+		() => ({ ...((selectedPlugin?.config as MaximConfigSchema) ?? {}), enabled: selectedPlugin?.enabled }),
 		[selectedPlugin],
 	);
 
-	const handleKoutakuConfigSave = (config: KoutakuFormSchema): Promise<void> => {
+	const handleKoutakuConfigSave = (config: MaximFormSchema): Promise<void> => {
 		return new Promise((resolve, reject) => {
 			updatePlugin({
 				name: "koutaku",
 				data: {
 					enabled: config.enabled,
-					config: config.koutaku_config,
+					config: config.maxim_config,
 				},
 			})
 				.unwrap()

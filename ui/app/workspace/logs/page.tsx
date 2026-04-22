@@ -847,21 +847,21 @@ export default function LogsPage() {
       },
       {
         title: "Success Rate",
-        value: <NumberFlow value={stats?.success_rate ?? 0} format={{ minimumFractionDigits: 2, koutakuumFractionDigits: 2 }} suffix="%" />,
+        value: <NumberFlow value={stats?.success_rate ?? 0} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} suffix="%" />,
         icon: <CheckCircle className="size-4" />,
         description:
           "Success rate as perceived by the system. Each fallback counts as a separate attempt. Retries on the same request are counted as one attempt.",
       },
       {
         title: "User Success Rate",
-        value: <NumberFlow value={stats?.user_facing_success_rate ?? 0} format={{ minimumFractionDigits: 2, koutakuumFractionDigits: 2 }} suffix="%" />,
+        value: <NumberFlow value={stats?.user_facing_success_rate ?? 0} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} suffix="%" />,
         icon: <CheckCircle className="size-4" />,
         description: "Success rate as perceived by the end user. It includes fallback chains as one request.",
       },
       {
         title: "Avg Latency",
         value: (
-          <NumberFlow value={stats?.average_latency ?? 0} format={{ minimumFractionDigits: 2, koutakuumFractionDigits: 2 }} suffix="ms" />
+          <NumberFlow value={stats?.average_latency ?? 0} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} suffix="ms" />
         ),
         icon: <Clock className="size-4" />,
       },

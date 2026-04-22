@@ -11,7 +11,6 @@ require (
 	github.com/google/pprof v0.0.0-20251213031049-b05bdaca462f
 	github.com/google/uuid v1.6.0
 	github.com/klauspost/compress v1.18.2
-	github.com/mark3labs/mcp-go v0.43.2
 	github.com/koutaku/koutaku/core v1.5.4
 	github.com/koutaku/koutaku/framework v1.3.4
 	github.com/koutaku/koutaku/plugins/compat v0.1.3
@@ -21,6 +20,7 @@ require (
 	github.com/koutaku/koutaku/plugins/prompts v1.0.4
 	github.com/koutaku/koutaku/plugins/semanticcache v1.5.4
 	github.com/koutaku/koutaku/plugins/telemetry v1.5.4
+	github.com/mark3labs/mcp-go v0.43.2
 	github.com/pion/rtcp v1.2.16
 	github.com/pion/webrtc/v4 v4.2.9
 	github.com/prometheus/client_golang v1.23.2
@@ -125,13 +125,12 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
+	github.com/koutaku/koutaku/plugins/mocker v1.5.4 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mailru/easyjson v0.9.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
-	github.com/koutaku/koutaku/plugins/mocker v1.5.4 // indirect
-	github.com/maximhq/maxim-go v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
@@ -209,12 +208,21 @@ require (
 )
 
 replace github.com/koutaku/koutaku/core => ../core
+
 replace github.com/koutaku/koutaku/framework => ../framework
+
 replace github.com/koutaku/koutaku/plugins/compat => ../plugins/compat
+
 replace github.com/koutaku/koutaku/plugins/governance => ../plugins/governance
+
 replace github.com/koutaku/koutaku/plugins/logging => ../plugins/logging
+
 replace github.com/koutaku/koutaku/plugins/mocker => ../plugins/mocker
+
 replace github.com/koutaku/koutaku/plugins/otel => ../plugins/otel
+
 replace github.com/koutaku/koutaku/plugins/prompts => ../plugins/prompts
+
 replace github.com/koutaku/koutaku/plugins/semanticcache => ../plugins/semanticcache
+
 replace github.com/koutaku/koutaku/plugins/telemetry => ../plugins/telemetry
