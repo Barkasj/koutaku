@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { WalletCards } from "lucide-react";
 import { ArrowUpRight } from "lucide-react";
 
-const CUSTOMERS_DOCS_URL = "https://docs.getkoutaku.ai/features/governance/virtual-keys#customers";
+const CUSTOMERS_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/features/governance/virtual-keys#customers";
 
 interface CustomersEmptyStateProps {
 	onAddClick: () => void;

@@ -9,7 +9,7 @@ export default function AccessProfilesIndexView() {
 				icon={<ShieldCheck className="h-[5.5rem] w-[5.5rem]" strokeWidth={1} />}
 				title="Unlock access profiles for better performance"
 				description="This feature is a part of the Koutaku enterprise license. Create access profiles to control access to your resources."
-				readmeLink="https://docs.getkoutaku.ai/enterprise/access-profiles"
+				readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/access-profiles"
 				testIdPrefix="access-profiles"
 			/>
 		</div>

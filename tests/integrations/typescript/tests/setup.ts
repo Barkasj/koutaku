@@ -20,14 +20,14 @@ config({ path: resolve(__dirname, '../.env') })
 config({ path: resolve(__dirname, '../../../../.env') })
 
 // Set default environment variables if not present
-if (!process.env.BIFROST_BASE_URL) {
-  process.env.BIFROST_BASE_URL = 'http://localhost:8080'
+if (!process.env.KOUTAKU_BASE_URL) {
+  process.env.KOUTAKU_BASE_URL = 'http://localhost:8080'
 }
 
 // Log test environment info
 console.log('\n🧪 Koutaku TypeScript Integration Tests')
 console.log('='.repeat(50))
-console.log(`📍 Koutaku URL: ${process.env.BIFROST_BASE_URL}`)
+console.log(`📍 Koutaku URL: ${process.env.KOUTAKU_BASE_URL}`)
 console.log(`🕐 Started at: ${new Date().toISOString()}`)
 
 // Check for available API keys
@@ -53,7 +53,7 @@ console.log('='.repeat(50) + '\n')
 
 // Export for use in tests if needed
 export const testEnvironment = {
-  koutakuUrl: process.env.BIFROST_BASE_URL,
+  koutakuUrl: process.env.KOUTAKU_BASE_URL,
   availableProviders: Object.entries(apiKeys)
     .filter(([, available]) => available)
     .map(([provider]) => provider.toLowerCase()),

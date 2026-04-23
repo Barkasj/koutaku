@@ -24,7 +24,7 @@ function getPortConfig(): PortConfig {
 
 	if (isDevelopment) {
 		// Development mode: Vite dev server runs on different port than Go server
-		const port = process.env.BIFROST_PORT || "8080";
+		const port = process.env.KOUTAKU_PORT || "8080";
 		return {
 			port,
 			isDevelopment: true,
@@ -70,14 +70,11 @@ export function getPort(): string {
  * Get the base URL for API calls (includes protocol and host)
  */
 export function getApiBaseUrl(): string {
-	const config = getPortConfig();
-
-	if (config.isDevelopment) {
-		return `${config.baseUrl}/api`;
-	} else {
-		// Production mode: use relative URL for API calls
-		return "/api";
-	}
+	// Always use relative URL so requests go through the Vite dev proxy
+	// (or the Go server in production). Using absolute localhost:8080
+	// breaks remote access — the browser resolves "localhost" to the
+	// client machine, not the server.
+	return "/api";
 }
 
 /**

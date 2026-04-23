@@ -1,6 +1,6 @@
 {
-  "$schema": "https://www.getkoutaku.ai/schema",
-  "encryption_key": "env.BIFROST_ENCRYPTION_KEY",
+  "$schema": "https://github.com/Barkasj/koutaku/config.schema.json",
+  "encryption_key": "env.KOUTAKU_ENCRYPTION_KEY",
   "config_store": {
     "enabled": false
   },

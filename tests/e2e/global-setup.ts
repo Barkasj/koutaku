@@ -14,7 +14,7 @@ import { join, resolve } from 'path'
 import { setTimeout } from 'timers/promises'
 
 const TEST_MCP_CLIENT_NAME = 'TestClient001'
-const BIFROST_BASE_URL = process.env.BIFROST_BASE_URL ?? 'http://localhost:8080'
+const KOUTAKU_BASE_URL = process.env.KOUTAKU_BASE_URL ?? 'http://localhost:8080'
 
 const REPO_ROOT = resolve(__dirname, '../..')
 const TEST_PLUGIN_PATH = join(REPO_ROOT, 'tmp', 'koutaku-test-plugin.so')
@@ -364,15 +364,15 @@ async function seedLLMLogs(baseUrl: string, count = 5): Promise<void> {
 }
 
 async function runKoutakuMCPAndResponsesSetup(): Promise<void> {
-  if (!process.env.BIFROST_BASE_URL) {
-    console.log('Skipping Koutaku MCP client and /v1/responses (BIFROST_BASE_URL not set)')
+  if (!process.env.KOUTAKU_BASE_URL) {
+    console.log('Skipping Koutaku MCP client and /v1/responses (KOUTAKU_BASE_URL not set)')
     return
   }
-  console.log(`Waiting for Koutaku API at ${BIFROST_BASE_URL}...`)
-  await waitForKoutakuAPI(BIFROST_BASE_URL)
+  console.log(`Waiting for Koutaku API at ${KOUTAKU_BASE_URL}...`)
+  await waitForKoutakuAPI(KOUTAKU_BASE_URL)
   console.log(`✓ Koutaku API ready`)
-  await ensureTestClient001AndSendResponses(BIFROST_BASE_URL)
-  await seedLLMLogs(BIFROST_BASE_URL, 30)
+  await ensureTestClient001AndSendResponses(KOUTAKU_BASE_URL)
+  await seedLLMLogs(KOUTAKU_BASE_URL, 30)
 }
 
 function runMCPTeardown(): void {
@@ -414,7 +414,7 @@ async function globalSetup(): Promise<() => Promise<void>> {
   } catch (error: unknown) {
     const err = error as Error
     console.error(`\n❌ Koutaku MCP client / v1/responses setup failed: ${err?.message || String(error)}`)
-    console.error(`   Ensure Koutaku is running at ${BIFROST_BASE_URL} and OPENAI_API_KEY is set for /v1/responses.`)
+    console.error(`   Ensure Koutaku is running at ${KOUTAKU_BASE_URL} and OPENAI_API_KEY is set for /v1/responses.`)
     runMCPTeardown()
     throw error
   }

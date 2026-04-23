@@ -25,7 +25,7 @@ export const configApi = baseApi.injectEndpoints({
 		getLatestRelease: builder.query<LatestReleaseResponse, void>({
 			queryFn: async (_arg, { signal }) => {
 				try {
-					const response = await axios.get("https://getkoutaku.ai/latest-release", {
+					const response = await axios.get("https://api.github.com/repos/Barkasj/koutaku/releases/latest", {
 						timeout: 3000, // 3 second timeout
 						signal,
 						headers: {
@@ -36,8 +36,8 @@ export const configApi = baseApi.injectEndpoints({
 					});
 					const data = response.data as any;
 					const normalized: LatestReleaseResponse = {
-						name: data.name ?? data.tag ?? data.version ?? "",
-						changelogUrl: data.changelogUrl ?? data.changelog_url ?? "",
+						name: data.tag_name ?? data.name ?? "",
+						changelogUrl: data.html_url ?? data.changelogUrl ?? "",
 					};
 					return { data: normalized };
 				} catch (error) {

@@ -10,7 +10,7 @@ export default function PromptDeploymentView(_props?: { omitTitle?: boolean }) {
 				icon={<Router className="h-8 w-8" strokeWidth={1.5} />}
 				title="Unlock prompt deployments for better prompt versioning and A/B testing."
 				description="This feature is a part of the Koutaku enterprise license. We would love to know more about your use case and how we can help you."
-				readmeLink="https://docs.getkoutaku.ai/enterprise/prompt-deployments"
+				readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/prompt-deployments"
 			/>
 		</div>
 	);

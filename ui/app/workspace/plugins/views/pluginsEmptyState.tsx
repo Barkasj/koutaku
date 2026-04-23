@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Puzzle } from "lucide-react";
 import { ArrowUpRight } from "lucide-react";
 
-const CUSTOM_PLUGINS_DOCS_URL = "https://docs.getkoutaku.ai/plugins";
+const CUSTOM_PLUGINS_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/plugins";
 
 interface PluginsEmptyStateProps {
 	onCreateClick: () => void;

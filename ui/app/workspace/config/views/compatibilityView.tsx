@@ -63,7 +63,7 @@ export default function CompatibilityView() {
 					Configure request conversions and compatibility fallbacks.{" "}
 					<a
 						className="text-primary underline"
-						href="https://docs.getkoutaku.ai/features/litellm-compat"
+						href="https://github.com/Barkasj/koutaku/tree/main/docs/features/litellm-compat"
 						target="_blank"
 						rel="noopener noreferrer"
 						data-testid="litellm-docs-link"

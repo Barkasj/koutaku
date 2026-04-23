@@ -13,7 +13,7 @@ test.describe('Placeholder and Enterprise Pages', () => {
     const readMore = page.getByRole('button', { name: /Read more/i })
     await expect(readMore).toBeVisible()
     const [popup] = await Promise.all([page.waitForEvent('popup'), readMore.click()])
-    await expect(popup).toHaveURL(/^https:\/\/docs\.getkoutaku\.ai\/enterprise\/alert-channels(\?|$)/)
+    await expect(popup).toHaveURL(/^https:\/\/github\.com\/Barkasj\/koutaku\/tree\/main\/docs\/enterprise\/alert-channels/)
     await popup.close()
   })
 
@@ -60,7 +60,7 @@ test.describe('Placeholder and Enterprise Pages', () => {
     const readMore = page.getByRole('button', { name: /Read more/i })
     await expect(readMore).toBeVisible()
     const [popup] = await Promise.all([page.waitForEvent('popup'), readMore.click()])
-    await expect(popup).toHaveURL(/^https:\/\/docs\.getkoutaku\.ai\/enterprise\/adaptive-load-balancing(\?|$)/)
+    await expect(popup).toHaveURL(/^https:\/\/github\.com\/Barkasj\/koutaku\/tree\/main\/docs\/enterprise\/adaptive-load-balancing/)
     await popup.close()
   })
 

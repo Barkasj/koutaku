@@ -9,7 +9,7 @@ export default function MCPAuthConfigView() {
 				icon={<ShieldUser className="h-[5.5rem] w-[5.5rem]" strokeWidth={1} />}
 				title="Unlock MCP Auth Config"
 				description="This feature is a part of the Koutaku enterprise license. Configure authentication for MCP servers to secure your MCP connections."
-				readmeLink="https://docs.getkoutaku.ai/mcp/overview"
+				readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/mcp/overview"
 			/>
 		</div>
 	);

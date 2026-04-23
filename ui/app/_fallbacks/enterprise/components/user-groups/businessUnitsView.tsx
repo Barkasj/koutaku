@@ -10,7 +10,7 @@ export function BusinessUnitsView() {
 				icon={<Building2 className="h-[5.5rem] w-[5.5rem]" strokeWidth={1} />}
 				title="Unlock business units & advanced governance"
 				description="Manage users, business units with our enterprise-grade governance. This feature is part of the Koutaku enterprise license."
-				readmeLink="https://docs.getkoutaku.ai/enterprise/advanced-governance"
+				readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/advanced-governance"
 			/>
 		</div>
 	);

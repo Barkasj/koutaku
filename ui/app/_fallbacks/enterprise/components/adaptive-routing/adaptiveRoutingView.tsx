@@ -9,7 +9,7 @@ export default function AdaptiveRoutingView() {
 				icon={<Shuffle className="h-[5.5rem] w-[5.5rem]" strokeWidth={1} />}
 				title="Unlock adaptive routing for better performance"
 				description="This feature is a part of the Koutaku enterprise license. We would love to know more about your use case and how we can help you."
-				readmeLink="https://docs.getkoutaku.ai/enterprise/adaptive-load-balancing"
+				readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/adaptive-load-balancing"
 			/>
 		</div>
 	);

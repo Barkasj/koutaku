@@ -1,5 +1,5 @@
 {
-    "$schema": "https://www.getkoutaku.ai/schema",
+    "$schema": "https://github.com/Barkasj/koutaku/config.schema.json",
     "client": {
         "enable_logging": true,
         "initial_pool_size": 1000

@@ -108,18 +108,18 @@ const externalLinks = [
 	},
 	{
 		title: "GitHub Repository",
-		url: "https://github.com/koutaku/koutaku",
+		url: "https://github.com/Barkasj/koutaku",
 		icon: GithubLogoIcon,
 	},
 	{
 		title: "Report a bug",
-		url: "https://github.com/koutaku/koutaku/issues/new?title=[Bug Report]&labels=bug&type=bug&projects=koutakuhq/1",
+		url: "https://github.com/Barkasj/koutaku/issues/new?title=[Bug Report]&labels=bug&type=bug",
 		icon: BugIcon,
 		strokeWidth: 1.5,
 	},
 	{
 		title: "Full Documentation",
-		url: "https://docs.getkoutaku.ai",
+		url: "https://github.com/Barkasj/koutaku#readme",
 		icon: BooksIcon,
 		strokeWidth: 1,
 	},
@@ -136,7 +136,7 @@ const productionSetupHelpCard = {
 			<br />
 			Book a demo with our team{" "}
 			<a
-				href="https://calendly.com/koutakuai/koutaku-demo?utm_source=bfd_sdbr"
+				href="https://github.com/Barkasj/koutaku"
 				target="_blank"
 				className="text-primary font-medium underline"
 				rel="noopener noreferrer"
@@ -706,10 +706,10 @@ export default function AppSidebar() {
 					]
 				: []),
 			{
-				title: "Evals",
-				url: "https://www.getkoutaku.ai",
-				icon: FlaskConical,
-				isExternal: true,
+		title: "Evals",
+			url: "/workspace/evals",
+			icon: FlaskConical,
+			isExternal: false,
 				description: "Evaluations",
 				hasAccess: true,
 			},
@@ -1040,7 +1040,7 @@ export default function AppSidebar() {
 					<div className="flex h-full flex-col gap-2">
 						<img src={newReleaseImage} alt="Koutaku" className="h-[95px] rounded-md object-cover" />
 						<a
-							href={`https://docs.getkoutaku.ai/changelogs/${latestRelease.name}`}
+							href={`https://github.com/Barkasj/koutaku/releases/tag/${latestRelease.name}`}
 							target="_blank"
 							rel="noopener noreferrer"
 							className="text-primary mt-auto pb-1 font-medium underline"

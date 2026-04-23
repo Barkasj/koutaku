@@ -3026,7 +3026,7 @@
         },
         "secretRef": {
           "type": "object",
-          "description": "Reference to an existing Kubernetes secret holding the MCP connection_string. Chart injects BIFROST_MCP_<NAME>_CONNECTION_STRING and rewrites connection_string in config.json.",
+          "description": "Reference to an existing Kubernetes secret holding the MCP connection_string. Chart injects KOUTAKU_MCP_<NAME>_CONNECTION_STRING and rewrites connection_string in config.json.",
           "properties": {
             "name": { "type": "string" },
             "connectionStringKey": { "type": "string", "default": "connection-string" }

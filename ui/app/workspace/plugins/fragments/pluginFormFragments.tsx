@@ -30,7 +30,7 @@ export function PluginFormFragment({ form, isEditMode = false }: PluginFormFragm
 						? "Update your plugin configuration. Plugin name and path are read-only."
 						: "Install a custom plugin by providing an absolute file path or HTTP URL accessible to Koutaku deployment (.so)."}{" "}
 					<a
-						href="https://docs.getkoutaku.ai/plugins"
+						href="https://github.com/Barkasj/koutaku/tree/main/docs/plugins"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="text-primary hover:underline"

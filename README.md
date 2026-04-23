@@ -50,8 +50,8 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 
 **Complete Setup Guides:**
 
-- [Gateway Setup](https://docs.getkoutaku.ai/quickstart/gateway/setting-up) - HTTP API deployment
-- [Go SDK Setup](https://docs.getkoutaku.ai/quickstart/go-sdk/setting-up) - Direct integration
+- [Gateway Setup](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/setting-up) - HTTP API deployment
+- [Go SDK Setup](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/go-sdk/setting-up) - Direct integration
 
 ---
 
@@ -68,7 +68,7 @@ In addition to private networking, custom security controls, and governance, ent
     <img src=".github/assets/book-demo-button.png" alt="Book a Demo" width="170" style="margin-top:5px;"/>
   </a>
   <div>
-  <a href="https://www.getkoutaku.ai/koutaku/enterprise" target="_blank" rel="noopener noreferrer">Explore enterprise capabilities</a>
+  <a href="https://github.com/Barkasj/koutaku/koutaku/enterprise" target="_blank" rel="noopener noreferrer">Explore enterprise capabilities</a>
   </div>
 </div>
 
@@ -78,32 +78,32 @@ In addition to private networking, custom security controls, and governance, ent
 
 ### Core Infrastructure
 
-- **[Unified Interface](https://docs.getkoutaku.ai/features/unified-interface)** - Single OpenAI-compatible API for all providers
-- **[Multi-Provider Support](https://docs.getkoutaku.ai/quickstart/gateway/provider-configuration)** - OpenAI, Anthropic, AWS Bedrock, Google Vertex, Azure, Cerebras, Cohere, Mistral, Ollama, Groq, and more
-- **[Automatic Fallbacks](https://docs.getkoutaku.ai/features/fallbacks)** - Seamless failover between providers and models with zero downtime
-- **[Load Balancing](https://docs.getkoutaku.ai/features/fallbacks)** - Intelligent request distribution across multiple API keys and providers
+- **[Unified Interface](https://github.com/Barkasj/koutaku/tree/main/docs/features/unified-interface)** - Single OpenAI-compatible API for all providers
+- **[Multi-Provider Support](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/provider-configuration)** - OpenAI, Anthropic, AWS Bedrock, Google Vertex, Azure, Cerebras, Cohere, Mistral, Ollama, Groq, and more
+- **[Automatic Fallbacks](https://github.com/Barkasj/koutaku/tree/main/docs/features/fallbacks)** - Seamless failover between providers and models with zero downtime
+- **[Load Balancing](https://github.com/Barkasj/koutaku/tree/main/docs/features/fallbacks)** - Intelligent request distribution across multiple API keys and providers
 
 ### Advanced Features
 
-- **[Model Context Protocol (MCP)](https://docs.getkoutaku.ai/features/mcp)** - Enable AI models to use external tools (filesystem, web search, databases)
-- **[Semantic Caching](https://docs.getkoutaku.ai/features/semantic-caching)** - Intelligent response caching based on semantic similarity to reduce costs and latency
-- **[Multimodal Support](https://docs.getkoutaku.ai/quickstart/gateway/streaming)** - Support for text,images, audio, and streaming, all behind a common interface.
-- **[Custom Plugins](https://docs.getkoutaku.ai/enterprise/custom-plugins)** - Extensible middleware architecture for analytics, monitoring, and custom logic
-- **[Governance](https://docs.getkoutaku.ai/features/governance)** - Usage tracking, rate limiting, and fine-grained access control
+- **[Model Context Protocol (MCP)](https://github.com/Barkasj/koutaku/tree/main/docs/features/mcp)** - Enable AI models to use external tools (filesystem, web search, databases)
+- **[Semantic Caching](https://github.com/Barkasj/koutaku/tree/main/docs/features/semantic-caching)** - Intelligent response caching based on semantic similarity to reduce costs and latency
+- **[Multimodal Support](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/streaming)** - Support for text,images, audio, and streaming, all behind a common interface.
+- **[Custom Plugins](https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/custom-plugins)** - Extensible middleware architecture for analytics, monitoring, and custom logic
+- **[Governance](https://github.com/Barkasj/koutaku/tree/main/docs/features/governance)** - Usage tracking, rate limiting, and fine-grained access control
 
 ### Enterprise & Security
 
-- **[Budget Management](https://docs.getkoutaku.ai/features/governance)** - Hierarchical cost control with virtual keys, teams, and customer budgets
-- **[SSO Integration](https://docs.getkoutaku.ai/features/sso-with-google-github)** - Google and GitHub authentication support
-- **[Observability](https://docs.getkoutaku.ai/features/observability)** - Native Prometheus metrics, distributed tracing, and comprehensive logging
-- **[Vault Support](https://docs.getkoutaku.ai/enterprise/vault-support)** - Secure API key management with HashiCorp Vault integration
+- **[Budget Management](https://github.com/Barkasj/koutaku/tree/main/docs/features/governance)** - Hierarchical cost control with virtual keys, teams, and customer budgets
+- **[SSO Integration](https://github.com/Barkasj/koutaku/tree/main/docs/features/sso-with-google-github)** - Google and GitHub authentication support
+- **[Observability](https://github.com/Barkasj/koutaku/tree/main/docs/features/observability)** - Native Prometheus metrics, distributed tracing, and comprehensive logging
+- **[Vault Support](https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/vault-support)** - Secure API key management with HashiCorp Vault integration
 
 ### Developer Experience
 
-- **[Zero-Config Startup](https://docs.getkoutaku.ai/quickstart/gateway/setting-up)** - Start immediately with dynamic provider configuration
-- **[Drop-in Replacement](https://docs.getkoutaku.ai/features/drop-in-replacement)** - Replace OpenAI/Anthropic/GenAI APIs with one line of code
-- **[SDK Integrations](https://docs.getkoutaku.ai/integrations/what-is-an-integration)** - Native support for popular AI SDKs with zero code changes
-- **[Configuration Flexibility](https://docs.getkoutaku.ai/quickstart/gateway/provider-configuration)** - Web UI, API-driven, or file-based configuration options
+- **[Zero-Config Startup](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/setting-up)** - Start immediately with dynamic provider configuration
+- **[Drop-in Replacement](https://github.com/Barkasj/koutaku/tree/main/docs/features/drop-in-replacement)** - Replace OpenAI/Anthropic/GenAI APIs with one line of code
+- **[SDK Integrations](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/what-is-an-integration)** - Native support for popular AI SDKs with zero code changes
+- **[Configuration Flexibility](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/provider-configuration)** - Web UI, API-driven, or file-based configuration options
 
 ---
 
@@ -157,7 +157,7 @@ docker run -p 8080:8080 -v $(pwd)/data:/app/data koutaku/koutaku
 
 **Features:** Web UI, real-time monitoring, multi-provider management, zero-config startup
 
-**Learn More:** [Gateway Setup Guide](https://docs.getkoutaku.ai/quickstart/gateway/setting-up)
+**Learn More:** [Gateway Setup Guide](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/setting-up)
 
 ### 2. Go SDK
 
@@ -169,7 +169,7 @@ go get github.com/koutaku/koutaku/core
 
 **Features:** Native Go APIs, embedded deployment, custom middleware integration
 
-**Learn More:** [Go SDK Guide](https://docs.getkoutaku.ai/quickstart/go-sdk/setting-up)
+**Learn More:** [Go SDK Guide](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/go-sdk/setting-up)
 
 ### 3. Drop-in Replacement
 
@@ -189,7 +189,7 @@ go get github.com/koutaku/koutaku/core
 + api_endpoint = "http://localhost:8080/genai"
 ```
 
-**Learn More:** [Integration Guides](https://docs.getkoutaku.ai/integrations/what-is-an-integration)
+**Learn More:** [Integration Guides](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/what-is-an-integration)
 
 ---
 
@@ -211,43 +211,43 @@ Koutaku adds virtually zero overhead to your AI requests. In sustained 5,000 RPS
 - **Efficient Queuing** - Sub-microsecond average wait times
 - **Fast Key Selection** - ~10 ns to pick weighted API keys
 
-**Complete Benchmarks:** [Performance Analysis](https://docs.getkoutaku.ai/benchmarking/getting-started)
+**Complete Benchmarks:** [Performance Analysis](https://github.com/Barkasj/koutaku/tree/main/docs/benchmarking/getting-started)
 
 ---
 
 ## Documentation
 
-**Complete Documentation:** [https://docs.getkoutaku.ai](https://docs.getkoutaku.ai)
+**Complete Documentation:** [https://github.com/Barkasj/koutaku/tree/main/docs](https://github.com/Barkasj/koutaku/tree/main/docs)
 
 ### Quick Start
 
-- [Gateway Setup](https://docs.getkoutaku.ai/quickstart/gateway/setting-up) - HTTP API deployment in 30 seconds
-- [Go SDK Setup](https://docs.getkoutaku.ai/quickstart/go-sdk/setting-up) - Direct Go integration
-- [Provider Configuration](https://docs.getkoutaku.ai/quickstart/gateway/provider-configuration) - Multi-provider setup
+- [Gateway Setup](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/setting-up) - HTTP API deployment in 30 seconds
+- [Go SDK Setup](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/go-sdk/setting-up) - Direct Go integration
+- [Provider Configuration](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/gateway/provider-configuration) - Multi-provider setup
 
 ### Features
 
-- [Multi-Provider Support](https://docs.getkoutaku.ai/features/unified-interface) - Single API for all providers
-- [MCP Integration](https://docs.getkoutaku.ai/features/mcp) - External tool calling
-- [Semantic Caching](https://docs.getkoutaku.ai/features/semantic-caching) - Intelligent response caching
-- [Fallbacks & Load Balancing](https://docs.getkoutaku.ai/features/fallbacks) - Reliability features
-- [Budget Management](https://docs.getkoutaku.ai/features/governance) - Cost control and governance
+- [Multi-Provider Support](https://github.com/Barkasj/koutaku/tree/main/docs/features/unified-interface) - Single API for all providers
+- [MCP Integration](https://github.com/Barkasj/koutaku/tree/main/docs/features/mcp) - External tool calling
+- [Semantic Caching](https://github.com/Barkasj/koutaku/tree/main/docs/features/semantic-caching) - Intelligent response caching
+- [Fallbacks & Load Balancing](https://github.com/Barkasj/koutaku/tree/main/docs/features/fallbacks) - Reliability features
+- [Budget Management](https://github.com/Barkasj/koutaku/tree/main/docs/features/governance) - Cost control and governance
 
 ### Integrations
 
-- [OpenAI SDK](https://docs.getkoutaku.ai/integrations/openai-sdk) - Drop-in OpenAI replacement
-- [Anthropic SDK](https://docs.getkoutaku.ai/integrations/anthropic-sdk) - Drop-in Anthropic replacement
-- [AWS Bedrock SDK](https://docs.getkoutaku.ai/integrations/bedrock-sdk) - AWS Bedrock integration
-- [Google GenAI SDK](https://docs.getkoutaku.ai/integrations/genai-sdk) - Drop-in GenAI replacement
-- [LiteLLM SDK](https://docs.getkoutaku.ai/integrations/litellm-sdk) - LiteLLM integration
-- [Langchain SDK](https://docs.getkoutaku.ai/integrations/langchain-sdk) - Langchain integration
+- [OpenAI SDK](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/openai-sdk) - Drop-in OpenAI replacement
+- [Anthropic SDK](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/anthropic-sdk) - Drop-in Anthropic replacement
+- [AWS Bedrock SDK](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/bedrock-sdk) - AWS Bedrock integration
+- [Google GenAI SDK](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/genai-sdk) - Drop-in GenAI replacement
+- [LiteLLM SDK](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/litellm-sdk) - LiteLLM integration
+- [Langchain SDK](https://github.com/Barkasj/koutaku/tree/main/docs/integrations/langchain-sdk) - Langchain integration
 
 ### Enterprise
 
-- [Custom Plugins](https://docs.getkoutaku.ai/enterprise/custom-plugins) - Extend functionality
-- [Clustering](https://docs.getkoutaku.ai/enterprise/clustering) - Multi-node deployment
-- [Vault Support](https://docs.getkoutaku.ai/enterprise/vault-support) - Secure key management
-- [Production Deployment](https://docs.getkoutaku.ai/deployment/docker-setup) - Scaling and monitoring
+- [Custom Plugins](https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/custom-plugins) - Extend functionality
+- [Clustering](https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/clustering) - Multi-node deployment
+- [Vault Support](https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/vault-support) - Secure key management
+- [Production Deployment](https://github.com/Barkasj/koutaku/tree/main/docs/deployment/docker-setup) - Scaling and monitoring
 
 ---
 
@@ -266,14 +266,14 @@ Get help with:
 
 ## Contributing
 
-We welcome contributions of all kinds! See our [Contributing Guide](https://docs.getkoutaku.ai/contributing/setting-up-repo) for:
+We welcome contributions of all kinds! See our [Contributing Guide](https://github.com/Barkasj/koutaku/tree/main/docs/contributing/setting-up-repo) for:
 
 - Setting up the development environment
 - Code conventions and best practices
 - How to submit pull requests
 - Building and testing locally
 
-For development requirements and build instructions, see our [Development Setup Guide](https://docs.getkoutaku.ai/contributing/setting-up-repo#development-environment-setup).
+For development requirements and build instructions, see our [Development Setup Guide](https://github.com/Barkasj/koutaku/tree/main/docs/contributing/setting-up-repo#development-environment-setup).
 
 ---
 

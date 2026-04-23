@@ -36,7 +36,7 @@ export default function ContactUsView({ icon, title, description, className, rea
 						aria-label="Book a demo (opens Calendly in new tab)"
 						data-testid={testIdPrefix ? `${testIdPrefix}-book-demo` : undefined}
 						onClick={() => {
-							window.open("https://calendly.com/koutakuai/koutaku-demo?utm_source=bfd_ent", "_blank", "noopener,noreferrer");
+							window.open("https://github.com/Barkasj/koutaku", "_blank", "noopener,noreferrer");
 						}}
 					>
 						Book a demo

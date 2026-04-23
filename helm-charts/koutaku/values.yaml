@@ -150,7 +150,7 @@ lifecycle:
       command: ["sh", "-c", "sleep 15"]
 
 # Koutaku specific configuration
-# You can find entire schema at https://getkoutaku.ai/schema
+# You can find entire schema at https://github.com/Barkasj/koutaku/schema
 koutaku:
   # Application settings
   appDir: /app/data
@@ -231,7 +231,7 @@ koutaku:
   # When using existingSecret in providerSecrets, the keys will be injected as env vars and
   # you should use env.VAR_NAME syntax in the value field
   # Note: The entire providers block is passed through to the config as-is.
-  # See https://getkoutaku.ai/schema for the full provider schema.
+  # See https://github.com/Barkasj/koutaku/schema for the full provider schema.
   providers: {}
     # openai:
     #   keys:

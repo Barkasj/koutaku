@@ -17,7 +17,7 @@ export default function MCPToolGroups() {
 						icon={<ToolCase className="h-[5.5rem] w-[5.5rem]" strokeWidth={1} />}
 						title="Unlock MCP Tool Groups"
 						description="This feature is a part of the Koutaku enterprise license. Configure tool groups for MCP servers to organize your MCP tools and govern them across your organization."
-						readmeLink="https://docs.getkoutaku.ai/mcp/overview"
+						readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/mcp/overview"
 					/>
 				</div>
 			</div>

@@ -12,7 +12,7 @@
   1. **GitHub Security Advisories (preferred)**: Use [GitHub's private vulnerability
   reporting](https://github.com/koutaku/koutaku/security/advisories/new) to submit a report
   directly through the repository.
-  2. **Email**: Send an email to **akshay@getkoutaku.ai** with the details of the
+  2. **Email**: Send an email to **security@github.com/Barkasj/koutaku** with the details of the
   vulnerability.
 
   ### What to include

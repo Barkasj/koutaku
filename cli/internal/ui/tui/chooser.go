@@ -18,7 +18,7 @@ import (
 
 const issuesURL = "https://github.com/koutaku/koutaku/issues/new"
 const repoURL = "https://github.com/koutaku/koutaku"
-const docsURL = "https://docs.getkoutaku.ai/quickstart/cli/getting-started"
+const docsURL = "https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/cli/getting-started"
 
 // HarnessOption represents a selectable coding harness (e.g. Claude Code, Codex)
 // with its installation status.

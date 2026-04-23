@@ -21,7 +21,7 @@ const externalLinks = [
 	},
 	{
 		title: "Full Documentation",
-		url: "https://docs.getkoutaku.ai",
+		url: "https://github.com/Barkasj/koutaku/tree/main/docs",
 		icon: BooksIcon,
 		strokeWidth: 1,
 	},

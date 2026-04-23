@@ -280,7 +280,7 @@ export default function SecurityView() {
 								: "Require a virtual key for all inference requests."}{" "}
 							See{" "}
 							<a
-								href="https://docs.getkoutaku.ai/features/governance/virtual-keys"
+								href="https://github.com/Barkasj/koutaku/tree/main/docs/features/governance/virtual-keys"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="text-primary underline"

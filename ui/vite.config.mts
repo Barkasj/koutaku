@@ -51,12 +51,13 @@ export default defineConfig({
 	},
 	define: {
 		"process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV ?? "production"),
-		"process.env.BIFROST_IS_ENTERPRISE": JSON.stringify(isEnterpriseBuild ? "true" : "false"),
-		"process.env.BIFROST_DISABLE_PROFILER": JSON.stringify(process.env.BIFROST_DISABLE_PROFILER ?? ""),
-		"process.env.BIFROST_ENTERPRISE_TRIAL_EXPIRY": JSON.stringify(process.env.ENTERPRISE_TRIAL_EXPIRY ?? ""),
-		"process.env.BIFROST_PORT": JSON.stringify(process.env.BIFROST_PORT ?? ""),
+		"process.env.KOUTAKU_IS_ENTERPRISE": JSON.stringify(isEnterpriseBuild ? "true" : "false"),
+		"process.env.KOUTAKU_DISABLE_PROFILER": JSON.stringify(process.env.KOUTAKU_DISABLE_PROFILER ?? ""),
+		"process.env.KOUTAKU_ENTERPRISE_TRIAL_EXPIRY": JSON.stringify(process.env.ENTERPRISE_TRIAL_EXPIRY ?? ""),
+		"process.env.KOUTAKU_PORT": JSON.stringify(process.env.KOUTAKU_PORT ?? ""),
 	},
 	server: {
+		host: "0.0.0.0",
 		port: 3000,
 		proxy: {
 			"/api": {

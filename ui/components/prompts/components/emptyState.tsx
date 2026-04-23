@@ -52,7 +52,7 @@ export function PromptsEmptyState() {
 						aria-label="Read more about prompt repository (opens in new tab)"
 						data-testid="empty-state-read-more"
 						onClick={() => {
-							window.open(`https://docs.getkoutaku.ai/features/prompt-repository?utm_source=bfd`, "_blank", "noopener,noreferrer");
+							window.open(`https://github.com/Barkasj/koutaku/tree/main/docs/features/prompt-repository?utm_source=bfd`, "_blank", "noopener,noreferrer");
 						}}
 					>
 						Read more <ArrowUpRight className="text-muted-foreground h-3 w-3" />

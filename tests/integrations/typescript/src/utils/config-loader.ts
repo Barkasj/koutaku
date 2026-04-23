@@ -282,12 +282,12 @@ class ConfigLoader {
   printConfigSummary(): void {
     if (!this.config) throw new Error('Config not loaded')
 
-    console.log('🔧 BIFROST INTEGRATION TEST CONFIGURATION (TypeScript)')
+    console.log('🔧 KOUTAKU INTEGRATION TEST CONFIGURATION (TypeScript)')
     console.log('='.repeat(80))
 
     // Koutaku configuration
     const koutaku = this.getKoutakuConfig()
-    console.log('\n🌉 BIFROST GATEWAY:')
+    console.log('\n🌉 KOUTAKU GATEWAY:')
     console.log(`  Base URL: ${koutaku.base_url}`)
     console.log('  Endpoints:')
     for (const [integration, endpoint] of Object.entries(koutaku.endpoints)) {

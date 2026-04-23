@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, SlidersHorizontal } from "lucide-react";
 
-const PRICING_OVERRIDES_DOCS_URL = "https://docs.getkoutaku.ai/features/governance/custom-pricing";
+const PRICING_OVERRIDES_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/features/governance/custom-pricing";
 
 interface PricingOverridesEmptyStateProps {
 	onCreateClick: () => void;

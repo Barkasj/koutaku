@@ -1,5 +1,5 @@
 {
-  "$schema": "https://www.getkoutaku.ai/schema",
+  "$schema": "https://github.com/Barkasj/koutaku/config.schema.json",
   "config_store": {
     "enabled": true,
     "type": "sqlite",
@@ -8,8 +8,8 @@
     }
   },
   "auth_config": {
-    "admin_username": "env.BIFROST_ADMIN_USERNAME",
-    "admin_password": "env.BIFROST_ADMIN_PASSWORD",
+    "admin_username": "env.KOUTAKU_ADMIN_USERNAME",
+    "admin_password": "env.KOUTAKU_ADMIN_PASSWORD",
     "is_enabled": true,
     "disable_auth_on_inference": true
   },

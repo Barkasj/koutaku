@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "https://www.getkoutaku.ai/schema",
+	"$id": "https://github.com/Barkasj/koutaku/config.schema.json",
   "title": "Koutaku Configuration Schema",
   "description": "Schema for Koutaku HTTP transport configuration",
   "type": "object",
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "The schema version. This should be set to \"https://www.getkoutaku.ai/schema\"",
-      "const": "https://www.getkoutaku.ai/schema"
+      "description": "The schema version. This should be set to \"https://github.com/Barkasj/koutaku/config.schema.json\"",
+      "const": "https://github.com/Barkasj/koutaku/config.schema.json"
     },
     "version": {
       "type": "integer",
@@ -18,7 +18,7 @@
     },
     "encryption_key": {
       "type": "string",
-      "description": "You can set the value as env.<ENV_VAR_NAME> to use an environment variable. We also read encryption key from BIFROST_ENCRYPTION_KEY environment variable. Note: once set, the encryption key cannot be changed unless you clean up the database. Accepts any string; a secure 32-byte AES-256 key will be derived using Argon2id KDF. If not provided, data will be saved in plain text. Recommended: use a passphrase of at least 16 bytes for better security"
+      "description": "You can set the value as env.<ENV_VAR_NAME> to use an environment variable. We also read encryption key from KOUTAKU_ENCRYPTION_KEY environment variable. Note: once set, the encryption key cannot be changed unless you clean up the database. Accepts any string; a secure 32-byte AES-256 key will be derived using Argon2id KDF. If not provided, data will be saved in plain text. Recommended: use a passphrase of at least 16 bytes for better security"
     },
     "auth_config": {
       "$ref": "#/$defs/auth_config"

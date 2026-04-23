@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, Server } from "lucide-react";
 
-const PROVIDERS_DOCS_URL = "https://docs.getkoutaku.ai/providers/supported-providers/overview";
+const PROVIDERS_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/providers/supported-providers/overview";
 
 interface ProvidersEmptyStateProps {
 	/** Dropdown (or button) for adding a provider; never greyed out */

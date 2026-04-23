@@ -281,7 +281,7 @@ jobs:
           \`\`\`
 
           - [View on npm](https://www.npmjs.com/package/@koutaku/koutaku-cli)
-          - [Documentation](https://docs.getkoutaku.ai/quickstart/cli/getting-started)" \
+          - [Documentation](https://github.com/Barkasj/koutaku/tree/main/docs/quickstart/cli/getting-started)" \
             --latest=false \
             ${PRERELEASE_FLAG}
 

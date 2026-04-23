@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Building } from "lucide-react";
 import { ArrowUpRight } from "lucide-react";
 
-const TEAMS_DOCS_URL = "https://docs.getkoutaku.ai/features/governance/virtual-keys#teams";
+const TEAMS_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/features/governance/virtual-keys#teams";
 
 interface TeamsEmptyStateProps {
 	onAddClick: () => void;

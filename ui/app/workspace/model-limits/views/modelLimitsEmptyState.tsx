@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
 import { ArrowUpRight } from "lucide-react";
 
-const MODEL_LIMITS_DOCS_URL = "https://docs.getkoutaku.ai/features/governance";
+const MODEL_LIMITS_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/features/governance";
 
 interface ModelLimitsEmptyStateProps {
 	onAddClick: () => void;

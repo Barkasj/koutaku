@@ -103,7 +103,7 @@ export default defineConfig({
     timeout: 120000,
     env: {
       ...process.env,
-      BIFROST_DISABLE_PROFILER: '1',
+      KOUTAKU_DISABLE_PROFILER: '1',
     },
   },
 

@@ -728,7 +728,7 @@ kubectl get secret koutaku -o yaml
 
 ## Resources
 
-- [Koutaku Documentation](https://docs.getkoutaku.ai)
+- [Koutaku Documentation](https://github.com/Barkasj/koutaku/tree/main/docs)
 - [GitHub Repository](https://github.com/koutaku/koutaku)
 - [Docker Hub](https://hub.docker.com/r/koutaku/koutaku)
 - [Discord Community](https://discord.gg/exN5KAydbU)

@@ -1571,7 +1571,7 @@ func TestProviderFallbackMechanism(t *testing.T) {
 // ============================================================================
 
 // TestVirtualKeyHeaderFormats verifies that Koutaku accepts all documented VK header formats
-// Reference: https://docs.getkoutaku.ai/features/governance/virtual-keys
+// Reference: https://github.com/Barkasj/koutaku/tree/main/docs/features/governance/virtual-keys
 // Supported headers:
 //   - x-bf-vk: Virtual key header (Koutaku native)
 //   - Authorization: Bearer token style (OpenAI style)

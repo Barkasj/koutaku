@@ -1,5 +1,5 @@
 {
-  "$schema": "https://www.getkoutaku.ai/schema",
+  "$schema": "https://github.com/Barkasj/koutaku/config.schema.json",
   "client": {
     "allow_direct_keys": false,
     "allowed_origins": [
@@ -27,8 +27,8 @@
   },
   "governance": {
     "auth_config": {
-      "admin_password": "env.BIFROST_ADMIN_PASSWORD",
-      "admin_username": "env.BIFROST_ADMIN_USERNAME",
+      "admin_password": "env.KOUTAKU_ADMIN_PASSWORD",
+      "admin_username": "env.KOUTAKU_ADMIN_USERNAME",
       "disable_auth_on_inference": true,
       "is_enabled": false
     },
@@ -70,7 +70,7 @@
             "weight": 0.5
           }
         ],
-        "value": "env.BIFROST_VK_PROD_ASSISTANT_US_01"
+        "value": "env.KOUTAKU_VK_PROD_ASSISTANT_US_01"
       },
       {
         "id": "sk-bf-vk-prod-assistant-eu-01",

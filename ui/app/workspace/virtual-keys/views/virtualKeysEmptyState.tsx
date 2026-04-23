@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { KeyRound } from "lucide-react";
 import { ArrowUpRight } from "lucide-react";
 
-const VIRTUAL_KEYS_DOCS_URL = "https://docs.getkoutaku.ai/features/governance/virtual-keys";
+const VIRTUAL_KEYS_DOCS_URL = "https://github.com/Barkasj/koutaku/tree/main/docs/features/governance/virtual-keys";
 
 interface VirtualKeysEmptyStateProps {
 	onAddClick: () => void;

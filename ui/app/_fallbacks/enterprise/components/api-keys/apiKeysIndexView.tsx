@@ -97,7 +97,7 @@ curl --location 'http://localhost:8080/v1/chat/completions'
 				icon={<KeyRound size={48} />}
 				title="Scope Based API Keys"
 				description="Need granular access control with scope-based API keys? Enterprise customers can create multiple API keys with specific permissions for different services, teams, or environments."
-				readmeLink="https://docs.getkoutaku.io/enterprise/api-keys"
+				readmeLink="https://github.com/Barkasj/koutaku/tree/main/docs/enterprise/api-keys"
 			/>
 		</div>
 	);

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://www.getkoutaku.ai/schema",
+  "$schema": "https://github.com/Barkasj/koutaku/config.schema.json",
   "config_store": {
     "enabled": true,
     "type": "sqlite",
@@ -33,7 +33,7 @@
   },
   "framework": {
     "pricing": {
-      "pricing_url": "https://getkoutaku.ai/datasheet",
+      "pricing_url": "",
       "pricing_sync_interval": 86400
     }
   }

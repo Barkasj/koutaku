@@ -1,5 +1,5 @@
 {
-  "$schema": "https://www.getkoutaku.ai/schema",
+  "$schema": "https://github.com/Barkasj/koutaku/config.schema.json",
   "client": {
     "allow_direct_keys": false,
     "allowed_origins": [
@@ -55,8 +55,8 @@
   },
   "governance": {
     "auth_config": {
-      "admin_password": "env.BIFROST_ADMIN_PASSWORD",
-      "admin_username": "env.BIFROST_ADMIN_USERNAME",
+      "admin_password": "env.KOUTAKU_ADMIN_PASSWORD",
+      "admin_username": "env.KOUTAKU_ADMIN_USERNAME",
       "disable_auth_on_inference": true,
       "is_enabled": false
     },
@@ -66,7 +66,7 @@
         "is_active": true,
         "name": "ai-portal-production-key",
         "description": "Virtual key for AI portal with MCP access to weather and calendar services",
-        "value": "env.BIFROST_VK_AI_PORTAL",
+        "value": "env.KOUTAKU_VK_AI_PORTAL",
         "mcp_configs": [
           {
             "mcp_client_name": "WeatherService",
@@ -100,7 +100,7 @@
         "is_active": true,
         "name": "internal-tools-key",
         "description": "Virtual key for internal tools with limited MCP access",
-        "value": "env.BIFROST_VK_INTERNAL",
+        "value": "env.KOUTAKU_VK_INTERNAL",
         "mcp_configs": [
           {
             "mcp_client_name": "WeatherService",

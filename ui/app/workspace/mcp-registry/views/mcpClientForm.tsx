@@ -320,7 +320,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<a
-											href="https://docs.getkoutaku.ai/mcp/code-mode"
+											href="https://github.com/Barkasj/koutaku/tree/main/docs/mcp/code-mode"
 											target="_blank"
 											rel="noopener noreferrer"
 											data-testid="code-mode-link-help"
