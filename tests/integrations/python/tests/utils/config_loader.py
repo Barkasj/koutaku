@@ -273,12 +273,12 @@ class ConfigLoader:
 
     def print_config_summary(self):
         """Print a summary of the configuration"""
-        print("🔧 BIFROST INTEGRATION TEST CONFIGURATION")
+        print("🔧 KOUTAKU INTEGRATION TEST CONFIGURATION")
         print("=" * 80)
 
         # Koutaku configuration
         koutaku = self.get_koutaku_config()
-        print("\n🌉 BIFROST GATEWAY:")
+        print("\n🌉 KOUTAKU GATEWAY:")
         print(f"  Base URL: {koutaku.base_url}")
         print("  Endpoints:")
         for integration, endpoint in koutaku.endpoints.items():

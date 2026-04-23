@@ -136,7 +136,7 @@ dev: install-ui install-air setup-workspace $(if $(DEBUG),install-delve) ## Star
 	@$(ECHO) "$(YELLOW)Starting UI development server...$(NC)"
 	@$(USE_NODE); if [ -n "$(DISABLE_PROFILER)" ]; then \
 		$(ECHO) "$(CYAN)DevProfiler disabled for testing$(NC)"; \
-		cd ui && BIFROST_DISABLE_PROFILER=1 npm run dev & \
+		cd ui && KOUTAKU_DISABLE_PROFILER=1 npm run dev & \
 	else \
 		cd ui && npm run dev & \
 	fi
@@ -150,7 +150,7 @@ dev: install-ui install-air setup-workspace $(if $(DEBUG),install-delve) ## Star
 	if [ -n "$(DEBUG)" ]; then \
 		$(ECHO) "$(CYAN)Starting with air + delve debugger on port 2345...$(NC)"; \
 		$(ECHO) "$(YELLOW)Attach your debugger to localhost:2345$(NC)"; \
-		cd transports/koutaku-http && BIFROST_UI_DEV=true air -c .air.debug.toml -- \
+		cd transports/koutaku-http && KOUTAKU_UI_DEV=true air -c .air.debug.toml -- \
 			-host "$(HOST)" \
 			-port "$(PORT)" \
 			-log-style "$(LOG_STYLE)" \
@@ -158,7 +158,7 @@ dev: install-ui install-air setup-workspace $(if $(DEBUG),install-delve) ## Star
 			$(if $(PROMETHEUS_LABELS),-prometheus-labels "$(PROMETHEUS_LABELS)") \
 			$(if $(APP_DIR),-app-dir "$(APP_DIR)"); \
 	else \
-		cd transports/koutaku-http && BIFROST_UI_DEV=true air -c .air.toml -- \
+		cd transports/koutaku-http && KOUTAKU_UI_DEV=true air -c .air.toml -- \
 			-host "$(HOST)" \
 			-port "$(PORT)" \
 			-log-style "$(LOG_STYLE)" \
@@ -185,7 +185,7 @@ dev-pulse: install-ui install-pulse setup-workspace $(if $(DEBUG),install-delve)
 	@$(ECHO) "$(YELLOW)Starting UI development server...$(NC)"
 	@$(USE_NODE); if [ -n "$(DISABLE_PROFILER)" ]; then \
 		$(ECHO) "$(CYAN)DevProfiler disabled for testing$(NC)"; \
-		cd ui && BIFROST_DISABLE_PROFILER=1 npm run dev & \
+		cd ui && KOUTAKU_DISABLE_PROFILER=1 npm run dev & \
 	else \
 		cd ui && npm run dev & \
 	fi
@@ -199,7 +199,7 @@ dev-pulse: install-ui install-pulse setup-workspace $(if $(DEBUG),install-delve)
 	if [ -n "$(DEBUG)" ]; then \
 		$(ECHO) "$(CYAN)Starting with pulse + delve debugger on port 2345...$(NC)"; \
 		$(ECHO) "$(YELLOW)Attach your debugger to localhost:2345$(NC)"; \
-		BIFROST_UI_DEV=true pulse -- \
+		KOUTAKU_UI_DEV=true pulse -- \
 			-host "$(HOST)" \
 			-port "$(PORT)" \
 			-log-style "$(LOG_STYLE)" \
@@ -207,7 +207,7 @@ dev-pulse: install-ui install-pulse setup-workspace $(if $(DEBUG),install-delve)
 			$(if $(PROMETHEUS_LABELS),-prometheus-labels "$(PROMETHEUS_LABELS)") \
 			$(if $(APP_DIR),-app-dir "$(APP_DIR)"); \
 	else \
-		BIFROST_UI_DEV=true pulse -- \
+		KOUTAKU_UI_DEV=true pulse -- \
 			-host "$(HOST)" \
 			-port "$(PORT)" \
 			-log-style "$(LOG_STYLE)" \
@@ -1106,8 +1106,8 @@ test-integrations-py: ## Run Python integration tests (Usage: make test-integrat
 		$(ECHO) "$(YELLOW)Loading environment variables from .env...$(NC)"; \
 		set -a; . ./.env; set +a; \
 	fi; \
-	BIFROST_STARTED=0; \
-	BIFROST_PID=""; \
+	KOUTAKU_STARTED=0; \
+	KOUTAKU_PID=""; \
 	TAIL_PID=""; \
 	TEST_PORT=$${PORT:-8080}; \
 	TEST_HOST=$${HOST:-localhost}; \
@@ -1117,22 +1117,22 @@ test-integrations-py: ## Run Python integration tests (Usage: make test-integrat
 	else \
 		$(ECHO) "$(YELLOW)Koutaku not running, starting it...$(NC)"; \
 		./tmp/koutaku-http -host "$$TEST_HOST" -port "$$TEST_PORT" -log-style "$(LOG_STYLE)" -log-level "$(LOG_LEVEL)" -app-dir tests/integrations/python > /tmp/koutaku-test.log 2>&1 & \
-		BIFROST_PID=$$!; \
-		BIFROST_STARTED=1; \
+		KOUTAKU_PID=$$!; \
+		KOUTAKU_STARTED=1; \
 		$(ECHO) "$(YELLOW)Waiting for Koutaku to be ready...$(NC)"; \
 		$(ECHO) "$(CYAN)Koutaku logs: /tmp/koutaku-test.log$(NC)"; \
 		(tail -f /tmp/koutaku-test.log 2>/dev/null | grep -E "error|panic|Error|ERRO|fatal|Fatal|FATAL" --line-buffered &) & \
 		TAIL_PID=$$!; \
 		for i in 1 2 3 4 5 6 7 8 9 10; do \
 			if curl -s -o /dev/null http://$$TEST_HOST:$$TEST_PORT/health 2>/dev/null; then \
-				$(ECHO) "$(GREEN)✓ Koutaku is ready (PID: $$BIFROST_PID)$(NC)"; \
+				$(ECHO) "$(GREEN)✓ Koutaku is ready (PID: $$KOUTAKU_PID)$(NC)"; \
 				break; \
 			fi; \
 			if [ $$i -eq 10 ]; then \
 				$(ECHO) "$(RED)Failed to start Koutaku$(NC)"; \
 				$(ECHO) "$(YELLOW)Koutaku logs:$(NC)"; \
 				cat /tmp/koutaku-test.log 2>/dev/null || $(ECHO) "No log file found"; \
-				[ -n "$$BIFROST_PID" ] && kill $$BIFROST_PID 2>/dev/null; \
+				[ -n "$$KOUTAKU_PID" ] && kill $$KOUTAKU_PID 2>/dev/null; \
 				[ -n "$$TAIL_PID" ] && kill $$TAIL_PID 2>/dev/null; \
 				exit 1; \
 			fi; \
@@ -1146,7 +1146,7 @@ test-integrations-py: ## Run Python integration tests (Usage: make test-integrat
 			$(ECHO) "$(RED)Error: Neither uv nor pytest found$(NC)"; \
 			$(ECHO) "$(YELLOW)Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh$(NC)"; \
 			$(ECHO) "$(YELLOW)Or install pytest: pip install pytest$(NC)"; \
-			[ $$BIFROST_STARTED -eq 1 ] && [ -n "$$BIFROST_PID" ] && kill $$BIFROST_PID 2>/dev/null; \
+			[ $$KOUTAKU_STARTED -eq 1 ] && [ -n "$$KOUTAKU_PID" ] && kill $$KOUTAKU_PID 2>/dev/null; \
 			[ -n "$$TAIL_PID" ] && kill $$TAIL_PID 2>/dev/null; \
 			exit 1; \
 		fi; \
@@ -1195,11 +1195,11 @@ test-integrations-py: ## Run Python integration tests (Usage: make test-integrat
 			fi; \
 		fi; \
 	fi; \
-	if [ $$BIFROST_STARTED -eq 1 ] && [ -n "$$BIFROST_PID" ]; then \
-		$(ECHO) "$(YELLOW)Stopping Koutaku (PID: $$BIFROST_PID)...$(NC)"; \
-		kill $$BIFROST_PID 2>/dev/null || true; \
+	if [ $$KOUTAKU_STARTED -eq 1 ] && [ -n "$$KOUTAKU_PID" ]; then \
+		$(ECHO) "$(YELLOW)Stopping Koutaku (PID: $$KOUTAKU_PID)...$(NC)"; \
+		kill $$KOUTAKU_PID 2>/dev/null || true; \
 		[ -n "$$TAIL_PID" ] && kill $$TAIL_PID 2>/dev/null || true; \
-		wait $$BIFROST_PID 2>/dev/null || true; \
+		wait $$KOUTAKU_PID 2>/dev/null || true; \
 		$(ECHO) "$(GREEN)✓ Koutaku stopped$(NC)"; \
 		if [ $$TEST_FAILED -eq 1 ]; then \
 			$(ECHO) ""; \
@@ -1236,8 +1236,8 @@ test-integrations-ts: ## Run TypeScript integration tests (Usage: make test-inte
 		$(ECHO) "$(YELLOW)Loading environment variables from .env...$(NC)"; \
 		set -a; . ./.env; set +a; \
 	fi; \
-	BIFROST_STARTED=0; \
-	BIFROST_PID=""; \
+	KOUTAKU_STARTED=0; \
+	KOUTAKU_PID=""; \
 	TAIL_PID=""; \
 	TEST_PORT=$${PORT:-8080}; \
 	TEST_HOST=$${HOST:-localhost}; \
@@ -1247,22 +1247,22 @@ test-integrations-ts: ## Run TypeScript integration tests (Usage: make test-inte
 	else \
 		$(ECHO) "$(YELLOW)Koutaku not running, starting it...$(NC)"; \
 		./tmp/koutaku-http -host "$$TEST_HOST" -port "$$TEST_PORT" -log-style "$(LOG_STYLE)" -log-level "$(LOG_LEVEL)" -app-dir tests/integrations/typescript > /tmp/koutaku-test.log 2>&1 & \
-		BIFROST_PID=$$!; \
-		BIFROST_STARTED=1; \
+		KOUTAKU_PID=$$!; \
+		KOUTAKU_STARTED=1; \
 		$(ECHO) "$(YELLOW)Waiting for Koutaku to be ready...$(NC)"; \
 		$(ECHO) "$(CYAN)Koutaku logs: /tmp/koutaku-test.log$(NC)"; \
 		(tail -f /tmp/koutaku-test.log 2>/dev/null | grep -E "error|panic|Error|ERRO|fatal|Fatal|FATAL" --line-buffered &) & \
 		TAIL_PID=$$!; \
 		for i in 1 2 3 4 5 6 7 8 9 10; do \
 			if curl -s -o /dev/null http://$$TEST_HOST:$$TEST_PORT/health 2>/dev/null; then \
-				$(ECHO) "$(GREEN)✓ Koutaku is ready (PID: $$BIFROST_PID)$(NC)"; \
+				$(ECHO) "$(GREEN)✓ Koutaku is ready (PID: $$KOUTAKU_PID)$(NC)"; \
 				break; \
 			fi; \
 			if [ $$i -eq 10 ]; then \
 				$(ECHO) "$(RED)Failed to start Koutaku$(NC)"; \
 				$(ECHO) "$(YELLOW)Koutaku logs:$(NC)"; \
 				cat /tmp/koutaku-test.log 2>/dev/null || $(ECHO) "No log file found"; \
-				[ -n "$$BIFROST_PID" ] && kill $$BIFROST_PID 2>/dev/null; \
+				[ -n "$$KOUTAKU_PID" ] && kill $$KOUTAKU_PID 2>/dev/null; \
 				[ -n "$$TAIL_PID" ] && kill $$TAIL_PID 2>/dev/null; \
 				exit 1; \
 			fi; \
@@ -1274,7 +1274,7 @@ test-integrations-ts: ## Run TypeScript integration tests (Usage: make test-inte
 	if ! which npm > /dev/null 2>&1; then \
 		$(ECHO) "$(RED)Error: npm not found$(NC)"; \
 		$(ECHO) "$(YELLOW)Install Node.js: https://nodejs.org/$(NC)"; \
-		[ $$BIFROST_STARTED -eq 1 ] && [ -n "$$BIFROST_PID" ] && kill $$BIFROST_PID 2>/dev/null; \
+		[ $$KOUTAKU_STARTED -eq 1 ] && [ -n "$$KOUTAKU_PID" ] && kill $$KOUTAKU_PID 2>/dev/null; \
 		[ -n "$$TAIL_PID" ] && kill $$TAIL_PID 2>/dev/null; \
 		exit 1; \
 	fi; \
@@ -1304,11 +1304,11 @@ test-integrations-ts: ## Run TypeScript integration tests (Usage: make test-inte
 			npm test $(if $(VERBOSE),-- --reporter=verbose,) || TEST_FAILED=1; \
 		fi; \
 	fi; \
-	if [ $$BIFROST_STARTED -eq 1 ] && [ -n "$$BIFROST_PID" ]; then \
-		$(ECHO) "$(YELLOW)Stopping Koutaku (PID: $$BIFROST_PID)...$(NC)"; \
-		kill $$BIFROST_PID 2>/dev/null || true; \
+	if [ $$KOUTAKU_STARTED -eq 1 ] && [ -n "$$KOUTAKU_PID" ]; then \
+		$(ECHO) "$(YELLOW)Stopping Koutaku (PID: $$KOUTAKU_PID)...$(NC)"; \
+		kill $$KOUTAKU_PID 2>/dev/null || true; \
 		[ -n "$$TAIL_PID" ] && kill $$TAIL_PID 2>/dev/null || true; \
-		wait $$BIFROST_PID 2>/dev/null || true; \
+		wait $$KOUTAKU_PID 2>/dev/null || true; \
 		$(ECHO) "$(GREEN)✓ Koutaku stopped$(NC)"; \
 		if [ $$TEST_FAILED -eq 1 ]; then \
 			$(ECHO) ""; \

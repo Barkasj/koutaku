@@ -168,7 +168,7 @@ class KoutakuTestRunner:
         print(f"Verbose output: {'Enabled' if verbose else 'Disabled'}")
 
         # Check Koutaku availability
-        koutaku_url = os.getenv("BIFROST_BASE_URL", "http://localhost:8080")
+        koutaku_url = os.getenv("KOUTAKU_BASE_URL", "http://localhost:8080")
         print(f"Koutaku URL: {koutaku_url}")
 
         start_time = time.time()

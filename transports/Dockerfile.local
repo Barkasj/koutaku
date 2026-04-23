@@ -51,7 +51,7 @@
   RUN cd /build/transports && go mod download
 
   # Copy UI build output into transports
-  COPY --from=ui-builder /app/out ./transports/bifrost-http/ui
+  COPY --from=ui-builder /app/out ./transports/koutaku-http/ui
 
   # Build the binary with CGO enabled and static SQLite linking
   ARG VERSION=unknown
@@ -61,7 +61,7 @@
       -a -trimpath \
       -tags "sqlite_static" \
       -o /app/main \
-      ./bifrost-http
+      ./koutaku-http
 
   # Verify build succeeded
   RUN test -f /app/main || (echo "Build failed" && exit 1)
